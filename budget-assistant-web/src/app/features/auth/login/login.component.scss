@@ -1,0 +1,79 @@
+/**
+ * 登入頁面樣式
+ * 為什麼使用中央對齊的卡片設計？
+ * 1. 聚焦使用者注意力
+ * 2. 在不同螢幕尺寸下都有良好的體驗
+ * 3. 符合現代 Web 應用程式的設計趨勢
+ */
+
+.login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+
+  mat-card-header {
+    text-align: center;
+    margin-bottom: 20px;
+
+    mat-card-title {
+      font-size: 24px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    mat-card-subtitle {
+      font-size: 14px;
+      color: #666;
+      margin-top: 8px;
+    }
+  }
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.login-button {
+  height: 48px;
+  margin-top: 16px;
+  font-size: 16px;
+  font-weight: 500;
+
+  mat-spinner {
+    margin-right: 8px;
+  }
+}
+
+.register-link {
+  text-align: center;
+  margin: 16px 0 0 0;
+  color: #666;
+  font-size: 14px;
+
+  button {
+    margin-left: 4px;
+  }
+}
+
+// 響應式設計
+@media (max-width: 480px) {
+  .login-container {
+    padding: 16px;
+  }
+
+  .login-card {
+    padding: 16px;
+  }
+}

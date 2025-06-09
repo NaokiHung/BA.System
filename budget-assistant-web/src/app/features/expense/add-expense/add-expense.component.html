@@ -1,0 +1,112 @@
+<!--
+  新增支出頁面模板
+  為什麼使用簡潔的表單設計？
+  1. 減少使用者認知負擔
+  2. 快速輸入，提升使用效率
+  3. 行動裝置友善
+-->
+<div class="add-expense-container">
+  <div class="page-header">
+    <h1>新增支出</h1>
+    <p>記錄您的現金支出</p>
+  </div>
+
+  <mat-card class="expense-form-card">
+    <form [formGroup]="expenseForm" (ngSubmit)="onSubmit()">
+      <!-- 金額輸入欄位 -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>支出金額</mat-label>
+        <input 
+          matInput 
+          type="number"
+          formControlName="amount"
+          placeholder="請輸入金額"
+          min="0.01"
+          max="999999.99"
+          step="0.01">
+        <span matTextPrefix>NT$ &nbsp;</span>
+        <mat-icon matSuffix>attach_money</mat-icon>
+        <mat-hint>請輸入您的支出金額</mat-hint>
+        <mat-error *ngIf="expenseForm.get('amount')?.invalid && expenseForm.get('amount')?.touched">
+          {{ getErrorMessage('amount') }}
+        </mat-error>
+      </mat-form-field>
+
+      <!-- 支出描述欄位 -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>支出描述</mat-label>
+        <textarea 
+          matInput 
+          formControlName="description"
+          placeholder="請描述這筆支出"
+          rows="3"
+          maxlength="200">
+        </textarea>
+        <mat-icon matSuffix>description</mat-icon>
+        <mat-hint align="end">
+          {{ expenseForm.get('description')?.value?.length || 0 }}/200
+        </mat-hint>
+        <mat-error *ngIf="expenseForm.get('description')?.invalid && expenseForm.get('description')?.touched">
+          {{ getErrorMessage('description') }}
+        </mat-error>
+      </mat-form-field>
+
+      <!-- 支出類別選擇 -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>支出類別</mat-label>
+        <mat-select formControlName="category">
+          <mat-option value="">請選擇類別</mat-option>
+          <mat-option *ngFor="let category of expenseCategories" [value]="category">
+            {{ category }}
+          </mat-option>
+        </mat-select>
+        <mat-icon matSuffix>category</mat-icon>
+        <mat-hint>選擇適合的支出類別（選填）</mat-hint>
+        <mat-error *ngIf="expenseForm.get('category')?.invalid && expenseForm.get('category')?.touched">
+          {{ getErrorMessage('category') }}
+        </mat-error>
+      </mat-form-field>
+
+      <!-- 操作按鈕 -->
+      <div class="form-actions">
+        <button 
+          mat-button 
+          type="button" 
+          (click)="onCancel()"
+          [disabled]="isLoading">
+          取消
+        </button>
+        
+        <button 
+          mat-raised-button 
+          color="primary" 
+          type="submit"
+          [disabled]="isLoading || expenseForm.invalid">
+          <mat-spinner diameter="20" *ngIf="isLoading"></mat-spinner>
+          <mat-icon *ngIf="!isLoading">add</mat-icon>
+          <span *ngIf="!isLoading">新增支出</span>
+          <span *ngIf="isLoading">處理中...</span>
+        </button>
+      </div>
+    </form>
+  </mat-card>
+
+  <!-- 快速金額按鈕 -->
+  <mat-card class="quick-amounts-card">
+    <mat-card-header>
+      <mat-card-title>常用金額</mat-card-title>
+      <mat-card-subtitle>點擊快速輸入</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="quick-amount-buttons">
+        <button 
+          mat-stroked-button 
+          *ngFor="let amount of [50, 100, 200, 500, 1000]"
+          (click)="setQuickAmount(amount)"
+          [disabled]="isLoading">
+          {{ formatCurrency(amount) }}
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

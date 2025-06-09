@@ -1,0 +1,115 @@
+<!--
+  預算設定頁面模板
+  為什麼要提供快速設定選項？
+  1. 提升使用者體驗
+  2. 減少輸入錯誤
+  3. 常用操作便利性
+-->
+<div class="budget-setting-container">
+  <div class="page-header">
+    <h1>設定月預算</h1>
+    <p>管理您的月度財務計畫</p>
+  </div>
+
+  <mat-card class="budget-form-card">
+    <form [formGroup]="budgetForm" (ngSubmit)="onSubmit()">
+      <!-- 預算金額輸入欄位 -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>預算金額</mat-label>
+        <input 
+          matInput 
+          type="number"
+          formControlName="amount"
+          placeholder="請輸入月預算金額"
+          min="1"
+          max="9999999.99"
+          step="1">
+        <span matTextPrefix>NT$ &nbsp;</span>
+        <mat-icon matSuffix>savings</mat-icon>
+        <mat-hint>請輸入您的月度預算金額</mat-hint>
+        <mat-error *ngIf="budgetForm.get('amount')?.invalid && budgetForm.get('amount')?.touched">
+          {{ getErrorMessage('amount') }}
+        </mat-error>
+      </mat-form-field>
+
+      <!-- 年份選擇 -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>年份</mat-label>
+        <mat-select formControlName="year">
+          <mat-option *ngFor="let year of years" [value]="year">
+            {{ year }}年
+          </mat-option>
+        </mat-select>
+        <mat-icon matSuffix>calendar_view_year</mat-icon>
+        <mat-hint>選擇預算適用的年份</mat-hint>
+        <mat-error *ngIf="budgetForm.get('year')?.invalid && budgetForm.get('year')?.touched">
+          {{ getErrorMessage('year') }}
+        </mat-error>
+      </mat-form-field>
+
+      <!-- 月份選擇 -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>月份</mat-label>
+        <mat-select formControlName="month">
+          <mat-option *ngFor="let month of months" [value]="month.value">
+            {{ month.name }}
+          </mat-option>
+        </mat-select>
+        <mat-icon matSuffix>calendar_month</mat-icon>
+        <mat-hint>選擇預算適用的月份</mat-hint>
+        <mat-error *ngIf="budgetForm.get('month')?.invalid && budgetForm.get('month')?.touched">
+          {{ getErrorMessage('month') }}
+        </mat-error>
+      </mat-form-field>
+
+      <!-- 操作按鈕 -->
+      <div class="form-actions">
+        <button 
+          mat-button 
+          type="button" 
+          (click)="onCancel()"
+          [disabled]="isLoading">
+          取消
+        </button>
+        
+        <button 
+          mat-raised-button 
+          color="primary" 
+          type="submit"
+          [disabled]="isLoading || budgetForm.invalid">
+          <mat-spinner diameter="20" *ngIf="isLoading"></mat-spinner>
+          <mat-icon *ngIf="!isLoading">save</mat-icon>
+          <span *ngIf="!isLoading">設定預算</span>
+          <span *ngIf="isLoading">處理中...</span>
+        </button>
+      </div>
+    </form>
+  </mat-card>
+
+  <!-- 快速設定選項 -->
+  <mat-card class="quick-settings-card">
+    <mat-card-header>
+      <mat-card-title>快速設定</mat-card-title>
+      <mat-card-subtitle>點擊快速選擇月份</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="quick-setting-buttons">
+        <button 
+          mat-stroked-button 
+          (click)="setCurrentMonth()"
+          [disabled]="isLoading">
+          <mat-icon>today</mat-icon>
+          本月
+        </button>
+        
+        <button 
+          mat-stroked-button 
+          (click)="setNextMonth()"
+          [disabled]="isLoading">
+          <mat-icon>navigate_next</mat-icon>
+          下個月
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

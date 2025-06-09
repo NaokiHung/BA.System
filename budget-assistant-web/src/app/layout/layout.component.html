@@ -1,0 +1,110 @@
+<!--
+  主版面配置模板
+  為什麼使用 Angular Material 的 Sidenav？
+  1. 提供響應式的側邊導航
+  2. 支援手機和桌面版本的不同行為
+  3. 與 Material Design 設計語言一致
+-->
+<div class="app-container">
+  <!-- 已登入狀態的版面 -->
+  <div *ngIf="isAuthenticated$ | async; else unauthenticatedLayout">
+    <mat-sidenav-container class="sidenav-container">
+      <!-- 側邊導航欄 -->
+      <mat-sidenav 
+        #drawer 
+        class="sidenav" 
+        fixedInViewport
+        [attr.role]="'navigation'"
+        [mode]="'over'"
+        [opened]="sidenavOpened">
+        
+        <!-- 使用者資訊區域 -->
+        <div class="user-info" *ngIf="currentUser$ | async as user">
+          <mat-icon class="user-avatar">account_circle</mat-icon>
+          <div class="user-details">
+            <span class="username">{{ user.displayName }}</span>
+            <span class="user-email">{{ user.username }}</span>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- 導航選單 -->
+        <mat-nav-list>
+          <a mat-list-item (click)="navigateTo('/dashboard')">
+            <mat-icon matListItemIcon>dashboard</mat-icon>
+            <span matListItemTitle>儀表板</span>
+          </a>
+          
+          <a mat-list-item (click)="navigateTo('/expense/add')">
+            <mat-icon matListItemIcon>add</mat-icon>
+            <span matListItemTitle>新增支出</span>
+          </a>
+          
+          <a mat-list-item (click)="navigateTo('/expense/budget')">
+            <mat-icon matListItemIcon>savings</mat-icon>
+            <span matListItemTitle>預算設定</span>
+          </a>
+          
+          <a mat-list-item (click)="navigateTo('/expense/history')">
+            <mat-icon matListItemIcon>history</mat-icon>
+            <span matListItemTitle>支出記錄</span>
+          </a>
+
+          <mat-divider></mat-divider>
+          
+          <a mat-list-item (click)="logout()">
+            <mat-icon matListItemIcon>logout</mat-icon>
+            <span matListItemTitle>登出</span>
+          </a>
+        </mat-nav-list>
+      </mat-sidenav>
+
+      <!-- 主要內容區域 -->
+      <mat-sidenav-content>
+        <!-- 頂部工具列 -->
+        <mat-toolbar color="primary" class="toolbar">
+          <button
+            type="button"
+            aria-label="Toggle sidenav"
+            mat-icon-button
+            (click)="toggleSidenav()">
+            <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
+          </button>
+          
+          <span class="app-title">個人理財管理系統</span>
+          
+          <span class="toolbar-spacer"></span>
+          
+          <!-- 使用者選單 -->
+          <button mat-icon-button [matMenuTriggerFor]="userMenu" *ngIf="currentUser$ | async as user">
+            <mat-icon>account_circle</mat-icon>
+          </button>
+          
+          <mat-menu #userMenu="matMenu">
+            <div class="user-menu-header">
+              <span>{{ (currentUser$ | async)?.displayName }}</span>
+            </div>
+            <mat-divider></mat-divider>
+            <button mat-menu-item (click)="logout()">
+              <mat-icon>logout</mat-icon>
+              <span>登出</span>
+            </button>
+          </mat-menu>
+        </mat-toolbar>
+
+        <!-- 路由內容 -->
+        <main class="main-content">
+          <router-outlet></router-outlet>
+        </main>
+      </mat-sidenav-content>
+    </mat-sidenav-container>
+  </div>
+
+  <!-- 未登入狀態的版面 -->
+  <ng-template #unauthenticatedLayout>
+    <div class="auth-layout">
+      <router-outlet></router-outlet>
+    </div>
+  </ng-template>
+</div>

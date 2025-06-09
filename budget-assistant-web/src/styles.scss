@@ -1,0 +1,135 @@
+/**
+ * 全域樣式
+ * 為什麼需要全域樣式？
+ * 1. 統一整個應用程式的視覺風格
+ * 2. 提供一致的間距和字型
+ * 3. 定義全域的 CSS 變數和主題
+ */
+
+// Angular Material 主題匯入
+@use '@angular/material' as mat;
+
+@include mat.core();
+
+// 定義主題色彩
+$primary: mat.define-palette(mat.$indigo-palette);
+$accent: mat.define-palette(mat.$pink-palette, A200, A100, A400);
+$warn: mat.define-palette(mat.$red-palette);
+
+// 建立主題
+$theme: mat.define-light-theme((
+  color: (
+    primary: $primary,
+    accent: $accent,
+    warn: $warn,
+  ),
+  typography: mat.define-typography-config(),
+  density: 0,
+));
+
+// 套用主題
+@include mat.all-component-themes($theme);
+
+// 全域重置
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Roboto', 'Noto Sans TC', sans-serif;
+  line-height: 1.5;
+  color: #333;
+  background-color: #fafafa;
+}
+
+// 全域樣式類別
+.full-width {
+  width: 100%;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.mt-1 { margin-top: 8px; }
+.mt-2 { margin-top: 16px; }
+.mt-3 { margin-top: 24px; }
+.mt-4 { margin-top: 32px; }
+
+.mb-1 { margin-bottom: 8px; }
+.mb-2 { margin-bottom: 16px; }
+.mb-3 { margin-bottom: 24px; }
+.mb-4 { margin-bottom: 32px; }
+
+// 自訂 Snackbar 樣式
+.success-snackbar {
+  --mdc-snackbar-container-color: #4caf50 !important;
+  --mdc-snackbar-supporting-text-color: white !important;
+}
+
+.error-snackbar {
+  --mdc-snackbar-container-color: #f44336 !important;
+  --mdc-snackbar-supporting-text-color: white !important;
+}
+
+.warning-snackbar {
+  --mdc-snackbar-container-color: #ff9800 !important;
+  --mdc-snackbar-supporting-text-color: white !important;
+}
+
+// 滾動條樣式美化
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+// 響應式工具類別
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .hide-desktop {
+    display: none !important;
+  }
+}
+
+// 載入動畫
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}

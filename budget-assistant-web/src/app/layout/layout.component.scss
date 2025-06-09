@@ -1,0 +1,107 @@
+/**
+ * 版面配置樣式
+ * 為什麼使用 SCSS？
+ * 1. 支援巢狀選擇器，程式碼更有組織
+ * 2. 變數和 mixin 功能提高可維護性
+ * 3. 與 Angular Material 主題系統整合
+ */
+
+.app-container {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.sidenav-container {
+  height: 100%;
+}
+
+.sidenav {
+  width: 280px;
+  background-color: #fafafa;
+
+  .user-info {
+    display: flex;
+    align-items: center;
+    padding: 20px 16px;
+    background-color: #f5f5f5;
+
+    .user-avatar {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      margin-right: 16px;
+      color: #666;
+    }
+
+    .user-details {
+      display: flex;
+      flex-direction: column;
+
+      .username {
+        font-weight: 500;
+        font-size: 16px;
+        color: #333;
+      }
+
+      .user-email {
+        font-size: 14px;
+        color: #666;
+        margin-top: 4px;
+      }
+    }
+  }
+}
+
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+  .app-title {
+    font-size: 18px;
+    font-weight: 500;
+  }
+
+  .toolbar-spacer {
+    flex: 1 1 auto;
+  }
+}
+
+.main-content {
+  padding: 20px;
+  height: calc(100vh - 64px); // 減去 toolbar 高度
+  overflow-y: auto;
+  background-color: #f5f5f5;
+}
+
+.auth-layout {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.user-menu-header {
+  padding: 8px 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+// 響應式設計
+@media (max-width: 768px) {
+  .sidenav {
+    width: 100%;
+  }
+  
+  .main-content {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding: 12px;
+  }
+}
