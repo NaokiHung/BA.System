@@ -1,18 +1,15 @@
 import { Component } from '@angular/core';
-import { LayoutComponent } from './layout/layout.component';
+import { RouterOutlet } from '@angular/router';
 
 /**
  * Angular 19 獨立根組件
- * 為什麼要使用獨立元件？
- * 1. 更簡潔的架構
- * 2. 更好的 tree-shaking
- * 3. 更明確的依賴關係
+ * 修正：移除對 LayoutComponent 的直接引用，改用路由
  */
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [LayoutComponent],
-  template: '<app-layout></app-layout>',
+  imports: [RouterOutlet],
+  template: '<router-outlet></router-outlet>',
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {

@@ -1,9 +1,5 @@
 <!--
-  註冊頁面模板
-  為什麼要提供即時的表單驗證回饋？
-  1. 提升使用者體驗
-  2. 減少表單提交失敗的機率
-  3. 幫助使用者理解輸入要求
+  註冊頁面模板 - 修正 mat-card-actions align 屬性
 -->
 <div class="register-container">
   <mat-card class="register-card">
@@ -120,13 +116,14 @@
       </form>
     </mat-card-content>
 
-    <mat-card-actions align="center">
-      <p class="login-link">
+    <!-- 修正：移除 align="center" 屬性 -->
+    <mat-card-actions>
+      <div class="login-link">
         已經有帳號了？
         <button mat-button color="primary" (click)="goToLogin()">
           立即登入
         </button>
-      </p>
+      </div>
     </mat-card-actions>
   </mat-card>
 </div>

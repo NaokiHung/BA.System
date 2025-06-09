@@ -4,12 +4,8 @@ import { catchError, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
 /**
- * HTTP 認證攔截器
- * 為什麼需要攔截器？
- * 1. 自動為所有 HTTP 請求添加 Authorization 標頭
- * 2. 統一處理認證失敗的情況
- * 3. 避免在每個服務中重複添加 Token
- * 4. 自動處理 401 錯誤並導向登入頁面
+ * Angular 19 函數式HTTP攔截器
+ * 修正：提供兩種匯出方式以支援不同的使用方式
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
@@ -32,3 +28,34 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     })
   );
 };
+
+// 為了向後相容，也提供類別版本
+import { Injectable } from '@angular/core';
+import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor, HttpErrorResponse } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+@Injectable()
+export class AuthInterceptor implements HttpInterceptor {
+  constructor(private authService: AuthService) {}
+
+  intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    const token = this.authService.getToken();
+    
+    if (token && this.authService.isTokenValid()) {
+      request = request.clone({
+        setHeaders: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+    }
+
+    return next.handle(request).pipe(
+      catchError((error: HttpErrorResponse) => {
+        if (error.status === 401) {
+          this.authService.logout();
+        }
+        return throwError(() => error);
+      })
+    );
+  }
+}

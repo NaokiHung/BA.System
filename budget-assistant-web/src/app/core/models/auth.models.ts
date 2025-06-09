@@ -1,10 +1,6 @@
 /**
  * 認證相關的資料模型
- * 為什麼要定義 TypeScript 介面？
- * 1. 提供型別安全性
- * 2. 自動完成和智能提示
- * 3. 編譯時錯誤檢查
- * 4. 與後端 DTO 保持一致
+ * 修正：將 User 模型移動到這裡
  */
 
 export interface LoginRequest {

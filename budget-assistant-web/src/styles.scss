@@ -1,34 +1,32 @@
 /**
- * 全域樣式
- * 為什麼需要全域樣式？
- * 1. 統一整個應用程式的視覺風格
- * 2. 提供一致的間距和字型
- * 3. 定義全域的 CSS 變數和主題
+ * 全域樣式 - Angular 19 修正版
+ * 修正 Angular Material 19 的新語法
  */
 
-// Angular Material 主題匯入
+// Angular Material 主題匯入 - 使用新的 Angular 19 語法
 @use '@angular/material' as mat;
 
+// 包含核心樣式
 @include mat.core();
 
-// 定義主題色彩
-$primary: mat.define-palette(mat.$indigo-palette);
-$accent: mat.define-palette(mat.$pink-palette, A200, A100, A400);
-$warn: mat.define-palette(mat.$red-palette);
+// 定義調色盤 - 使用新的語法
+$my-primary: mat.m2-define-palette(mat.$m2-indigo-palette);
+$my-accent: mat.m2-define-palette(mat.$m2-pink-palette, A200, A100, A400);
+$my-warn: mat.m2-define-palette(mat.$m2-red-palette);
 
-// 建立主題
-$theme: mat.define-light-theme((
+// 定義主題 - 使用新的語法
+$my-theme: mat.m2-define-light-theme((
   color: (
-    primary: $primary,
-    accent: $accent,
-    warn: $warn,
+    primary: $my-primary,
+    accent: $my-accent,
+    warn: $my-warn,
   ),
-  typography: mat.define-typography-config(),
+  typography: mat.m2-define-typography-config(),
   density: 0,
 ));
 
 // 套用主題
-@include mat.all-component-themes($theme);
+@include mat.all-component-themes($my-theme);
 
 // 全域重置
 * {
@@ -71,7 +69,7 @@ body {
 .mb-3 { margin-bottom: 24px; }
 .mb-4 { margin-bottom: 32px; }
 
-// 自訂 Snackbar 樣式
+// 自訂 Snackbar 樣式 - 使用 CSS 變數
 .success-snackbar {
   --mdc-snackbar-container-color: #4caf50 !important;
   --mdc-snackbar-supporting-text-color: white !important;

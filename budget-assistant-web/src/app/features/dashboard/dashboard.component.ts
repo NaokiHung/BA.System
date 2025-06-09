@@ -9,14 +9,11 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ExpenseService } from '../../core/services/expense.service';
 import { AuthService } from '../../core/services/auth.service';
-import { MonthlyBudgetResponse, User } from '../../core/models/expense.models';
+import { MonthlyBudgetResponse } from '../../core/models/expense.models';
+import { User } from '../../core/models/auth.models'; // 修正：從正確的位置匯入 User
 
 /**
- * 儀表板組件 - Angular 19 獨立元件
- * 為什麼需要儀表板？
- * 1. 提供系統概覽和關鍵指標
- * 2. 作為使用者的主要導航起點
- * 3. 快速存取常用功能
+ * 儀表板組件 - 修正匯入問題
  */
 @Component({
   selector: 'app-dashboard',
@@ -43,7 +40,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isLoading = true;
   error: string | null = null;
 
-  // 儀表板統計數據
   budgetUtilizationPercentage = 0;
   remainingDays = 0;
   currentMonth = '';
@@ -59,9 +55,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  /**
-   * 取得當前使用者資訊
-   */
   private getCurrentUser(): void {
     this.authService.currentUser$
       .pipe(takeUntil(this.destroy$))
@@ -70,9 +63,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       });
   }
 
-  /**
-   * 載入儀表板資料
-   */
   private loadDashboardData(): void {
     this.isLoading = true;
     this.error = null;
@@ -93,12 +83,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       });
   }
 
-  /**
-   * 計算預算統計數據
-   */
   private calculateBudgetStatistics(): void {
     if (this.budgetData) {
-      // 計算預算使用率
       if (this.budgetData.totalBudget > 0) {
         const usedAmount = this.budgetData.totalBudget - this.budgetData.remainingCash;
         this.budgetUtilizationPercentage = Math.round((usedAmount / this.budgetData.totalBudget) * 100);
@@ -108,25 +94,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * 計算本月剩餘天數
-   */
   private calculateRemainingDays(): void {
     const now = new Date();
     const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     this.remainingDays = Math.max(0, lastDayOfMonth.getDate() - now.getDate());
   }
 
-  /**
-   * 重新載入資料
-   */
   refreshData(): void {
     this.loadDashboardData();
   }
 
-  /**
-   * 格式化金額顯示
-   */
   formatCurrency(amount: number): string {
     return new Intl.NumberFormat('zh-TW', {
       style: 'currency',
@@ -135,18 +112,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }).format(amount);
   }
 
-  /**
-   * 取得預算狀態的顏色
-   */
   getBudgetStatusColor(): string {
     if (this.budgetUtilizationPercentage <= 60) return 'primary';
     if (this.budgetUtilizationPercentage <= 80) return 'accent';
     return 'warn';
   }
 
-  /**
-   * 導航方法
-   */
   navigateToExpense(): void {
     this.router.navigate(['/expense/add']);
   }

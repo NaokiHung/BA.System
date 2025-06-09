@@ -1,10 +1,5 @@
 <!--
-  登入頁面模板
-  為什麼使用 Angular Material？
-  1. 提供一致的 Material Design 體驗
-  2. 內建無障礙支援
-  3. 響應式設計
-  4. 豐富的組件庫
+  登入頁面模板 - 修正 mat-card-actions align 屬性
 -->
 <div class="login-container">
   <mat-card class="login-card">
@@ -66,13 +61,14 @@
       </form>
     </mat-card-content>
 
-    <mat-card-actions align="center">
-      <p class="register-link">
+    <!-- 修正：移除 align="center" 屬性 -->
+    <mat-card-actions>
+      <div class="register-link">
         還沒有帳號？
         <button mat-button color="primary" (click)="goToRegister()">
           立即註冊
         </button>
-      </p>
+      </div>
     </mat-card-actions>
   </mat-card>
 </div>
