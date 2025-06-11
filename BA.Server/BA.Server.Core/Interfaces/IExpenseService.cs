@@ -11,7 +11,7 @@ namespace BA.Server.Core.Interfaces
     public interface IExpenseService
     {
         // === 現有方法（保持不變） ===
-        
+
         /// <summary>
         /// 取得當月預算資訊
         /// </summary>
@@ -69,6 +69,21 @@ namespace BA.Server.Core.Interfaces
         /// 3. 確保使用者只能存取自己的支出記錄
         /// </summary>
         Task<ExpenseDetailResponse?> GetExpenseDetailAsync(string userId, int expenseId);
+        
+         /// <summary>
+        /// 更新現金支出記錄
+        /// </summary>
+        Task<ExpenseResponse> UpdateCashExpenseAsync(string userId, int expenseId, UpdateCashExpenseRequest request);
+
+        /// <summary>
+        /// 刪除現金支出記錄
+        /// </summary>
+        Task<ExpenseResponse> DeleteCashExpenseAsync(string userId, int expenseId);
+
+        /// <summary>
+        /// 取得單一支出記錄詳情
+        /// </summary>
+        Task<CashExpenseDetailResponse?> GetCashExpenseDetailAsync(string userId, int expenseId);
 
         // === 未來可擴展的方法 ===
 

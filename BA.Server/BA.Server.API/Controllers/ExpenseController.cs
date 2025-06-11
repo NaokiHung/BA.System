@@ -64,7 +64,7 @@ namespace BA.Server.API.Controllers
                 }
 
                 var response = await _expenseService.AddCashExpenseAsync(userId, request);
-                
+
                 if (response.Success)
                 {
                     return CreatedAtAction(nameof(GetCurrentMonthBudget), response);
@@ -109,7 +109,7 @@ namespace BA.Server.API.Controllers
                 }
 
                 var response = await _expenseService.AddCreditCardExpenseAsync(userId, request);
-                
+
                 if (response.Success)
                 {
                     return CreatedAtAction(nameof(GetCurrentMonthBudget), response);
@@ -154,7 +154,7 @@ namespace BA.Server.API.Controllers
                 }
 
                 var response = await _expenseService.UpdateExpenseAsync(userId, expenseId, request);
-                
+
                 if (response.Success)
                 {
                     return Ok(response);
@@ -194,7 +194,7 @@ namespace BA.Server.API.Controllers
                 }
 
                 var response = await _expenseService.DeleteExpenseAsync(userId, expenseId);
-                
+
                 if (response.Success)
                 {
                     return Ok(response);
@@ -234,7 +234,7 @@ namespace BA.Server.API.Controllers
                 }
 
                 var response = await _expenseService.GetExpenseDetailAsync(userId, expenseId);
-                
+
                 if (response != null)
                 {
                     return Ok(response);
@@ -272,7 +272,7 @@ namespace BA.Server.API.Controllers
 
                 var response = await _expenseService.SetMonthlyBudgetAsync(
                     userId, request.Amount, request.Year, request.Month);
-                
+
                 if (response.Success)
                 {
                     return Ok(response);
@@ -329,5 +329,114 @@ namespace BA.Server.API.Controllers
         }
 
         #endregion
+        
+        /// <summary>
+        /// 更新現金支出記錄
+        /// </summary>
+        [HttpPut("cash/{expenseId}")]
+        public async Task<ActionResult<ExpenseResponse>> UpdateCashExpense(int expenseId, [FromBody] UpdateCashExpenseRequest request)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var userId = GetCurrentUserId();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("無效的使用者身份");
+                }
+
+                var response = await _expenseService.UpdateCashExpenseAsync(userId, expenseId, request);
+                
+                if (response.Success)
+                {
+                    return Ok(response);
+                }
+                else
+                {
+                    return BadRequest(response);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "更新支出記錄 API 發生錯誤，ExpenseId: {ExpenseId}", expenseId);
+                return StatusCode(500, new ExpenseResponse
+                {
+                    Success = false,
+                    Message = "系統暫時無法處理請求"
+                });
+            }
+        }
+
+        /// <summary>
+        /// 刪除現金支出記錄
+        /// </summary>
+        [HttpDelete("cash/{expenseId}")]
+        public async Task<ActionResult<ExpenseResponse>> DeleteCashExpense(int expenseId)
+        {
+            try
+            {
+                var userId = GetCurrentUserId();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("無效的使用者身份");
+                }
+
+                var response = await _expenseService.DeleteCashExpenseAsync(userId, expenseId);
+                
+                if (response.Success)
+                {
+                    return Ok(response);
+                }
+                else
+                {
+                    return BadRequest(response);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "刪除支出記錄 API 發生錯誤，ExpenseId: {ExpenseId}", expenseId);
+                return StatusCode(500, new ExpenseResponse
+                {
+                    Success = false,
+                    Message = "系統暫時無法處理請求"
+                });
+            }
+        }
+
+        /// <summary>
+        /// 取得支出記錄詳情
+        /// </summary>
+        [HttpGet("cash/{expenseId}")]
+        public async Task<ActionResult<CashExpenseDetailResponse>> GetCashExpenseDetail(int expenseId)
+        {
+            try
+            {
+                var userId = GetCurrentUserId();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("無效的使用者身份");
+                }
+
+                var response = await _expenseService.GetCashExpenseDetailAsync(userId, expenseId);
+                
+                if (response != null)
+                {
+                    return Ok(response);
+                }
+                else
+                {
+                    return NotFound(new { message = "找不到指定的支出記錄" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "取得支出記錄詳情 API 發生錯誤，ExpenseId: {ExpenseId}", expenseId);
+                return StatusCode(500, new { message = "系統暫時無法處理請求" });
+            }
+        }
     }
 }
