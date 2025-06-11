@@ -234,10 +234,10 @@ namespace BA.Server.Business.Services
         }
 
         /// <summary>
-        /// 取得現金支出詳細資料
+        /// 取得現金支出詳細資料（對應 Controller 的 GetExpenseDetailAsync）
         /// 流程：驗證權限 → 查詢支出 → 轉換為回應格式
         /// </summary>
-        public async Task<CashExpenseDetailResponse> GetCashExpenseDetailAsync(string userId, int expenseId)
+        public async Task<CashExpenseDetailResponse> GetExpenseDetailAsync(string userId, int expenseId)
         {
             try
             {
@@ -271,10 +271,10 @@ namespace BA.Server.Business.Services
         }
 
         /// <summary>
-        /// 更新現金支出
+        /// 更新現金支出（對應 Controller 的 UpdateExpenseAsync）
         /// 流程：驗證權限 → 計算差額 → 檢查預算 → 更新支出 → 調整預算
         /// </summary>
-        public async Task<ExpenseResponse> UpdateCashExpenseAsync(string userId, int expenseId, UpdateCashExpenseRequest request)
+        public async Task<ExpenseResponse> UpdateExpenseAsync(string userId, int expenseId, UpdateCashExpenseRequest request)
         {
             try
             {
@@ -362,10 +362,10 @@ namespace BA.Server.Business.Services
         }
 
         /// <summary>
-        /// 刪除現金支出
+        /// 刪除現金支出（對應 Controller 的 DeleteExpenseAsync）
         /// 流程：驗證權限 → 刪除支出 → 回復預算餘額
         /// </summary>
-        public async Task<ExpenseResponse> DeleteCashExpenseAsync(string userId, int expenseId)
+        public async Task<ExpenseResponse> DeleteExpenseAsync(string userId, int expenseId)
         {
             try
             {
@@ -383,8 +383,8 @@ namespace BA.Server.Business.Services
                     };
                 }
 
-                // 步驟2：刪除支出記錄
-                await _expenseRepository.DeleteAsync(expense);
+                // 步驟2：刪除支出記錄（修正：傳入 ID 而不是實體）
+                await _expenseRepository.DeleteAsync(expense.Id);
 
                 // 步驟3：回復預算餘額
                 var budgets = await _budgetRepository.FindAsync(
@@ -417,6 +417,20 @@ namespace BA.Server.Business.Services
                     Message = "刪除支出失敗，請稍後再試"
                 };
             }
+        }
+
+        /// <summary>
+        /// 新增信用卡支出（暫時未實作）
+        /// </summary>
+        public async Task<ExpenseResponse> AddCreditCardExpenseAsync(string userId, object request)
+        {
+            // 暫時回傳未實作的回應
+            await Task.CompletedTask;
+            return new ExpenseResponse
+            {
+                Success = false,
+                Message = "信用卡支出功能尚未實作"
+            };
         }
 
         #endregion

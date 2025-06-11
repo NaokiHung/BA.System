@@ -40,29 +40,45 @@ namespace BA.Server.Core.Interfaces
         Task<ExpenseResponse> AddCashExpenseAsync(string userId, AddCashExpenseRequest request);
 
         /// <summary>
-        /// 取得現金支出詳細資料
+        /// 取得現金支出詳細資料（對應 Controller 的 GetExpenseDetailAsync）
         /// </summary>
         /// <param name="userId">使用者 ID</param>
         /// <param name="expenseId">支出 ID</param>
         /// <returns>支出詳細資料</returns>
-        Task<CashExpenseDetailResponse> GetCashExpenseDetailAsync(string userId, int expenseId);
+        Task<CashExpenseDetailResponse> GetExpenseDetailAsync(string userId, int expenseId);
 
         /// <summary>
-        /// 更新現金支出
+        /// 更新現金支出（對應 Controller 的 UpdateExpenseAsync）
         /// </summary>
         /// <param name="userId">使用者 ID</param>
         /// <param name="expenseId">支出 ID</param>
         /// <param name="request">更新支出請求</param>
         /// <returns>支出操作回應</returns>
-        Task<ExpenseResponse> UpdateCashExpenseAsync(string userId, int expenseId, UpdateCashExpenseRequest request);
+        Task<ExpenseResponse> UpdateExpenseAsync(string userId, int expenseId, UpdateCashExpenseRequest request);
 
         /// <summary>
-        /// 刪除現金支出
+        /// 刪除現金支出（對應 Controller 的 DeleteExpenseAsync）
         /// </summary>
         /// <param name="userId">使用者 ID</param>
         /// <param name="expenseId">支出 ID</param>
         /// <returns>支出操作回應</returns>
-        Task<ExpenseResponse> DeleteCashExpenseAsync(string userId, int expenseId);
+        Task<ExpenseResponse> DeleteExpenseAsync(string userId, int expenseId);
+
+        /// <summary>
+        /// 取得現金支出詳細資料（對應 Controller 的 GetExpenseDetailAsync）
+        /// </summary>
+        /// <param name="userId">使用者 ID</param>
+        /// <param name="expenseId">支出 ID</param>
+        /// <returns>支出詳細資料</returns>
+        Task<CashExpenseDetailResponse> GetExpenseDetailAsync(string userId, int expenseId);
+
+        /// <summary>
+        /// 新增信用卡支出（暫時用 NotImplementedException，未來實作）
+        /// </summary>
+        /// <param name="userId">使用者 ID</param>
+        /// <param name="request">信用卡支出請求</param>
+        /// <returns>支出操作回應</returns>
+        Task<ExpenseResponse> AddCreditCardExpenseAsync(string userId, object request);
 
         // 歷史記錄相關方法
         /// <summary>
