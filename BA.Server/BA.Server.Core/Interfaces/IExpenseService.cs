@@ -3,7 +3,7 @@ using BA.Server.Core.DTOs.Expense;
 namespace BA.Server.Core.Interfaces
 {
     /// <summary>
-    /// 支出服務介面
+    /// 支出服務介面 - 與 Controller 完全對應
     /// 為什麼要定義介面？
     /// 1. 遵循依賴反轉原則（DIP）
     /// 2. 便於單元測試時進行 Mock
@@ -40,24 +40,24 @@ namespace BA.Server.Core.Interfaces
         Task<ExpenseResponse> AddCashExpenseAsync(string userId, AddCashExpenseRequest request);
 
         /// <summary>
-        /// 取得現金支出詳細資料（對應 Controller 的 GetExpenseDetailAsync）
+        /// 新增信用卡支出
         /// </summary>
         /// <param name="userId">使用者 ID</param>
-        /// <param name="expenseId">支出 ID</param>
-        /// <returns>支出詳細資料</returns>
-        Task<CashExpenseDetailResponse> GetExpenseDetailAsync(string userId, int expenseId);
+        /// <param name="request">信用卡支出請求</param>
+        /// <returns>支出操作回應</returns>
+        Task<ExpenseResponse> AddCreditCardExpenseAsync(string userId, object request);
 
         /// <summary>
-        /// 更新現金支出（對應 Controller 的 UpdateExpenseAsync）
+        /// 更新支出 - 與 Controller 的 UpdateExpenseAsync 對應
         /// </summary>
         /// <param name="userId">使用者 ID</param>
         /// <param name="expenseId">支出 ID</param>
         /// <param name="request">更新支出請求</param>
         /// <returns>支出操作回應</returns>
-        Task<ExpenseResponse> UpdateExpenseAsync(string userId, int expenseId, UpdateCashExpenseRequest request);
+        Task<ExpenseResponse> UpdateExpenseAsync(string userId, int expenseId, UpdateExpenseRequest request);
 
         /// <summary>
-        /// 刪除現金支出（對應 Controller 的 DeleteExpenseAsync）
+        /// 刪除支出 - 與 Controller 的 DeleteExpenseAsync 對應
         /// </summary>
         /// <param name="userId">使用者 ID</param>
         /// <param name="expenseId">支出 ID</param>
@@ -65,20 +65,12 @@ namespace BA.Server.Core.Interfaces
         Task<ExpenseResponse> DeleteExpenseAsync(string userId, int expenseId);
 
         /// <summary>
-        /// 取得現金支出詳細資料（對應 Controller 的 GetExpenseDetailAsync）
+        /// 取得支出詳細資料 - 與 Controller 的 GetExpenseDetailAsync 對應
         /// </summary>
         /// <param name="userId">使用者 ID</param>
         /// <param name="expenseId">支出 ID</param>
         /// <returns>支出詳細資料</returns>
-        Task<CashExpenseDetailResponse> GetExpenseDetailAsync(string userId, int expenseId);
-
-        /// <summary>
-        /// 新增信用卡支出（暫時用 NotImplementedException，未來實作）
-        /// </summary>
-        /// <param name="userId">使用者 ID</param>
-        /// <param name="request">信用卡支出請求</param>
-        /// <returns>支出操作回應</returns>
-        Task<ExpenseResponse> AddCreditCardExpenseAsync(string userId, object request);
+        Task<ExpenseDetailResponse> GetExpenseDetailAsync(string userId, int expenseId);
 
         // 歷史記錄相關方法
         /// <summary>

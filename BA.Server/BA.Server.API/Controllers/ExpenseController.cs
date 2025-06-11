@@ -349,7 +349,7 @@ namespace BA.Server.API.Controllers
                     return Unauthorized("無效的使用者身份");
                 }
 
-                var response = await _expenseService.UpdateCashExpenseAsync(userId, expenseId, request);
+                var response = await _expenseService.UpdateExpenseAsync(userId, expenseId, request);
                 
                 if (response.Success)
                 {
@@ -385,7 +385,7 @@ namespace BA.Server.API.Controllers
                     return Unauthorized("無效的使用者身份");
                 }
 
-                var response = await _expenseService.DeleteCashExpenseAsync(userId, expenseId);
+                var response = await _expenseService.DeleteExpenseAsync(userId, expenseId);
                 
                 if (response.Success)
                 {
@@ -421,7 +421,7 @@ namespace BA.Server.API.Controllers
                     return Unauthorized("無效的使用者身份");
                 }
 
-                var response = await _expenseService.GetCashExpenseDetailAsync(userId, expenseId);
+                var response = await _expenseService.GetExpenseDetailAsync(userId, expenseId);
                 
                 if (response != null)
                 {

@@ -7,7 +7,7 @@ using BA.Server.Core.Interfaces;
 namespace BA.Server.Business.Services
 {
     /// <summary>
-    /// 支出服務實作
+    /// 支出服務實作 - 與 Controller 完全對應
     /// 為什麼要實作所有介面方法？
     /// 1. 符合介面契約 (Interface Segregation Principle)
     /// 2. 提供完整的 CRUD 操作
@@ -199,7 +199,7 @@ namespace BA.Server.Business.Services
                     Month = month,
                     Amount = request.Amount,
                     Description = request.Description,
-                    Category = request.Category,
+                    Category = request.Category ?? "其他",
                     CreatedDate = currentDate
                 };
 
@@ -234,10 +234,24 @@ namespace BA.Server.Business.Services
         }
 
         /// <summary>
-        /// 取得現金支出詳細資料（對應 Controller 的 GetExpenseDetailAsync）
+        /// 新增信用卡支出（暫時未實作）
+        /// </summary>
+        public async Task<ExpenseResponse> AddCreditCardExpenseAsync(string userId, object request)
+        {
+            // 暫時回傳未實作的回應
+            await Task.CompletedTask;
+            return new ExpenseResponse
+            {
+                Success = false,
+                Message = "信用卡支出功能尚未實作"
+            };
+        }
+
+        /// <summary>
+        /// 取得支出詳細資料 - 與 Controller 的 GetExpenseDetailAsync 對應
         /// 流程：驗證權限 → 查詢支出 → 轉換為回應格式
         /// </summary>
-        public async Task<CashExpenseDetailResponse> GetExpenseDetailAsync(string userId, int expenseId)
+        public async Task<ExpenseDetailResponse> GetExpenseDetailAsync(string userId, int expenseId)
         {
             try
             {
@@ -251,7 +265,7 @@ namespace BA.Server.Business.Services
                     throw new UnauthorizedAccessException("找不到指定的支出記錄或您沒有權限存取");
                 }
 
-                return new CashExpenseDetailResponse
+                return new ExpenseDetailResponse
                 {
                     Id = expense.Id,
                     Amount = expense.Amount,
@@ -271,10 +285,10 @@ namespace BA.Server.Business.Services
         }
 
         /// <summary>
-        /// 更新現金支出（對應 Controller 的 UpdateExpenseAsync）
+        /// 更新支出 - 與 Controller 的 UpdateExpenseAsync 對應
         /// 流程：驗證權限 → 計算差額 → 檢查預算 → 更新支出 → 調整預算
         /// </summary>
-        public async Task<ExpenseResponse> UpdateExpenseAsync(string userId, int expenseId, UpdateCashExpenseRequest request)
+        public async Task<ExpenseResponse> UpdateExpenseAsync(string userId, int expenseId, UpdateExpenseRequest request)
         {
             try
             {
@@ -352,7 +366,7 @@ namespace BA.Server.Business.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "更新現金支出時發生錯誤，使用者：{UserId}，支出ID：{ExpenseId}", userId, expenseId);
+                _logger.LogError(ex, "更新支出時發生錯誤，使用者：{UserId}，支出ID：{ExpenseId}", userId, expenseId);
                 return new ExpenseResponse
                 {
                     Success = false,
@@ -362,7 +376,7 @@ namespace BA.Server.Business.Services
         }
 
         /// <summary>
-        /// 刪除現金支出（對應 Controller 的 DeleteExpenseAsync）
+        /// 刪除支出 - 與 Controller 的 DeleteExpenseAsync 對應
         /// 流程：驗證權限 → 刪除支出 → 回復預算餘額
         /// </summary>
         public async Task<ExpenseResponse> DeleteExpenseAsync(string userId, int expenseId)
@@ -410,27 +424,13 @@ namespace BA.Server.Business.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "刪除現金支出時發生錯誤，使用者：{UserId}，支出ID：{ExpenseId}", userId, expenseId);
+                _logger.LogError(ex, "刪除支出時發生錯誤，使用者：{UserId}，支出ID：{ExpenseId}", userId, expenseId);
                 return new ExpenseResponse
                 {
                     Success = false,
                     Message = "刪除支出失敗，請稍後再試"
                 };
             }
-        }
-
-        /// <summary>
-        /// 新增信用卡支出（暫時未實作）
-        /// </summary>
-        public async Task<ExpenseResponse> AddCreditCardExpenseAsync(string userId, object request)
-        {
-            // 暫時回傳未實作的回應
-            await Task.CompletedTask;
-            return new ExpenseResponse
-            {
-                Success = false,
-                Message = "信用卡支出功能尚未實作"
-            };
         }
 
         #endregion
