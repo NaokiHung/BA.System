@@ -1,0 +1,266 @@
+<!--
+  使用者資料管理頁面樣板
+  檔案路徑：budget-assistant-web/src/app/features/user/profile/user-profile.component.html
+  
+  為什麼使用標籤頁設計？
+  1. 將不同功能區塊分開，提升使用者體驗
+  2. 避免頁面過長，便於瀏覽
+  3. 符合現代 Web 應用程式的設計慣例
+-->
+<div class="user-profile-container">
+  <div class="page-header">
+    <h1>個人資料管理</h1>
+    <p>管理您的帳戶資訊和安全設定</p>
+  </div>
+
+  <!-- 使用者資訊概覽 -->
+  <mat-card class="user-info-card" *ngIf="currentUser">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>account_circle</mat-icon>
+      <mat-card-title>{{ currentUser.displayName }}</mat-card-title>
+      <mat-card-subtitle>{{ currentUser.username }}</mat-card-subtitle>
+    </mat-card-header>
+  </mat-card>
+
+  <!-- 管理功能標籤頁 -->
+  <mat-card class="management-card">
+    <mat-tab-group>
+      <!-- 個人資料標籤 -->
+      <mat-tab label="個人資料">
+        <div class="tab-content">
+          <h3>
+            <mat-icon>person</mat-icon>
+            基本資料
+          </h3>
+          <p class="tab-description">更新您的個人資訊</p>
+
+          <form [formGroup]="profileForm" (ngSubmit)="updateProfile()">
+            <!-- 顯示名稱 -->
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>顯示名稱</mat-label>
+              <input 
+                matInput 
+                formControlName="displayName"
+                placeholder="請輸入您的顯示名稱">
+              <mat-icon matSuffix>badge</mat-icon>
+              <mat-hint>這個名稱會顯示在系統介面中</mat-hint>
+              <mat-error *ngIf="profileForm.get('displayName')?.invalid && profileForm.get('displayName')?.touched">
+                {{ getProfileErrorMessage('displayName') }}
+              </mat-error>
+            </mat-form-field>
+
+            <!-- 電子郵件 -->
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>電子郵件</mat-label>
+              <input 
+                matInput 
+                type="email"
+                formControlName="email"
+                placeholder="請輸入您的電子郵件">
+              <mat-icon matSuffix>email</mat-icon>
+              <mat-hint>用於接收系統通知和密碼重設</mat-hint>
+              <mat-error *ngIf="profileForm.get('email')?.invalid && profileForm.get('email')?.touched">
+                {{ getProfileErrorMessage('email') }}
+              </mat-error>
+            </mat-form-field>
+
+            <!-- 操作按鈕 -->
+            <div class="form-actions">
+              <button 
+                mat-raised-button 
+                color="primary" 
+                type="submit"
+                [disabled]="profileForm.invalid || isUpdatingProfile">
+                <mat-spinner diameter="20" *ngIf="isUpdatingProfile"></mat-spinner>
+                <mat-icon *ngIf="!isUpdatingProfile">save</mat-icon>
+                <span *ngIf="!isUpdatingProfile">儲存變更</span>
+                <span *ngIf="isUpdatingProfile">儲存中...</span>
+              </button>
+
+              <button 
+                mat-button 
+                type="button"
+                (click)="resetProfileForm()"
+                [disabled]="isUpdatingProfile">
+                <mat-icon>refresh</mat-icon>
+                重設
+              </button>
+            </div>
+          </form>
+        </div>
+      </mat-tab>
+
+      <!-- 密碼變更標籤 -->
+      <mat-tab label="密碼變更">
+        <div class="tab-content">
+          <h3>
+            <mat-icon>lock</mat-icon>
+            變更密碼
+          </h3>
+          <p class="tab-description">定期變更密碼以確保帳戶安全</p>
+
+          <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+            <!-- 目前密碼 -->
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>目前密碼</mat-label>
+              <input 
+                matInput 
+                [type]="hideCurrentPassword ? 'password' : 'text'"
+                formControlName="currentPassword"
+                placeholder="請輸入目前密碼">
+              <button 
+                mat-icon-button 
+                matSuffix 
+                type="button"
+                (click)="hideCurrentPassword = !hideCurrentPassword">
+                <mat-icon>{{ hideCurrentPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+              <mat-error *ngIf="passwordForm.get('currentPassword')?.invalid && passwordForm.get('currentPassword')?.touched">
+                {{ getPasswordErrorMessage('currentPassword') }}
+              </mat-error>
+            </mat-form-field>
+
+            <!-- 新密碼 -->
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>新密碼</mat-label>
+              <input 
+                matInput 
+                [type]="hideNewPassword ? 'password' : 'text'"
+                formControlName="newPassword"
+                placeholder="請輸入新密碼">
+              <button 
+                mat-icon-button 
+                matSuffix 
+                type="button"
+                (click)="hideNewPassword = !hideNewPassword">
+                <mat-icon>{{ hideNewPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+              <mat-hint>密碼必須至少6個字元，包含英文字母和數字</mat-hint>
+              <mat-error *ngIf="passwordForm.get('newPassword')?.invalid && passwordForm.get('newPassword')?.touched">
+                {{ getPasswordErrorMessage('newPassword') }}
+              </mat-error>
+            </mat-form-field>
+
+            <!-- 確認新密碼 -->
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>確認新密碼</mat-label>
+              <input 
+                matInput 
+                [type]="hideConfirmPassword ? 'password' : 'text'"
+                formControlName="confirmPassword"
+                placeholder="請再次輸入新密碼">
+              <button 
+                mat-icon-button 
+                matSuffix 
+                type="button"
+                (click)="hideConfirmPassword = !hideConfirmPassword">
+                <mat-icon>{{ hideConfirmPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+              <mat-error *ngIf="passwordForm.get('confirmPassword')?.invalid && passwordForm.get('confirmPassword')?.touched">
+                {{ getPasswordErrorMessage('confirmPassword') }}
+              </mat-error>
+            </mat-form-field>
+
+            <!-- 操作按鈕 -->
+            <div class="form-actions">
+              <button 
+                mat-raised-button 
+                color="primary" 
+                type="submit"
+                [disabled]="passwordForm.invalid || isChangingPassword">
+                <mat-spinner diameter="20" *ngIf="isChangingPassword"></mat-spinner>
+                <mat-icon *ngIf="!isChangingPassword">security</mat-icon>
+                <span *ngIf="!isChangingPassword">變更密碼</span>
+                <span *ngIf="isChangingPassword">變更中...</span>
+              </button>
+
+              <button 
+                mat-button 
+                type="button"
+                (click)="resetPasswordForm()"
+                [disabled]="isChangingPassword">
+                <mat-icon>clear</mat-icon>
+                清除
+              </button>
+            </div>
+          </form>
+        </div>
+      </mat-tab>
+
+      <!-- 帳戶資訊標籤 -->
+      <mat-tab label="帳戶資訊">
+        <div class="tab-content">
+          <h3>
+            <mat-icon>info</mat-icon>
+            帳戶資訊
+          </h3>
+          <p class="tab-description">檢視您的帳戶詳細資訊</p>
+
+          <div class="account-info-grid" *ngIf="currentUser">
+            <div class="info-item">
+              <mat-icon>person</mat-icon>
+              <div class="info-content">
+                <span class="info-label">使用者名稱</span>
+                <span class="info-value">{{ currentUser.username }}</span>
+              </div>
+            </div>
+
+            <div class="info-item">
+              <mat-icon>badge</mat-icon>
+              <div class="info-content">
+                <span class="info-label">顯示名稱</span>
+                <span class="info-value">{{ currentUser.displayName }}</span>
+              </div>
+            </div>
+
+            <div class="info-item" *ngIf="currentUser.email">
+              <mat-icon>email</mat-icon>
+              <div class="info-content">
+                <span class="info-label">電子郵件</span>
+                <span class="info-value">{{ currentUser.email }}</span>
+              </div>
+            </div>
+
+            <div class="info-item">
+              <mat-icon>date_range</mat-icon>
+              <div class="info-content">
+                <span class="info-label">註冊日期</span>
+                <span class="info-value">{{ registrationDate || '資料載入中...' }}</span>
+              </div>
+            </div>
+
+            <div class="info-item">
+              <mat-icon>access_time</mat-icon>
+              <div class="info-content">
+                <span class="info-label">最後登入</span>
+                <span class="info-value">{{ lastLoginDate || '資料載入中...' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <mat-divider class="section-divider"></mat-divider>
+
+          <!-- 帳戶統計 -->
+          <h4>使用統計</h4>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <mat-icon color="primary">receipt</mat-icon>
+              <div class="stat-content">
+                <span class="stat-number">{{ totalExpenseRecords || 0 }}</span>
+                <span class="stat-label">支出記錄</span>
+              </div>
+            </div>
+
+            <div class="stat-item">
+              <mat-icon color="accent">savings</mat-icon>
+              <div class="stat-content">
+                <span class="stat-number">{{ totalBudgets || 0 }}</span>
+                <span class="stat-label">設定預算</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </mat-card>
+</div>

@@ -1,53 +1,53 @@
 import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
-import { AuthGuard } from './core/guards/auth.guard';
-import { NoAuthGuard } from './core/guards/no-auth.guard';
+import { RouterModule, Routes, PreloadAllModules } from '@angular/router';
+import { authGuard } from './core/guards/auth.guard';
 
 /**
- * 應用程式路由配置
- * 為什麼使用延遲載入（lazy loading）？
- * 1. 減少初始載入時間
- * 2. 按需載入功能模組
- * 3. 提升應用程式效能
+ * 主應用程式路由設定
+ * 檔案路徑：budget-assistant-web/src/app/app-routing.module.ts
+ * 
+ * 使用 Angular 新式路由架構 (standalone components + routes)
+ * 路由路徑：/user/profile
  */
+
 const routes: Routes = [
-  // 預設路由導向儀表板
-  { 
-    path: '', 
-    redirectTo: '/dashboard', 
-    pathMatch: 'full' 
+  {
+    path: '',
+    redirectTo: '/dashboard',
+    pathMatch: 'full'
   },
-  
-  // 認證相關路由（未登入時可存取）
   {
     path: 'auth',
-    canActivate: [NoAuthGuard],  // 已登入使用者不能存取
-    loadChildren: () => import('./features/auth/auth.module').then(m => m.AuthModule)
+    loadChildren: () => import('./features/auth/auth.routes').then(r => r.AUTH_ROUTES)
   },
-  
-  // 儀表板（需要登入）
   {
     path: 'dashboard',
-    canActivate: [AuthGuard],  // 需要登入才能存取
-    loadChildren: () => import('./features/dashboard/dashboard.module').then(m => m.DashboardModule)
+    loadChildren: () => import('./features/dashboard/dashboard.routes').then(r => r.DASHBOARD_ROUTES),
+    canActivate: [authGuard]
   },
-  
-  // 支出管理（需要登入）
   {
     path: 'expense',
-    canActivate: [AuthGuard],
-    loadChildren: () => import('./features/expense/expense.module').then(m => m.ExpenseModule)
+    loadChildren: () => import('./features/expense/expense.routes').then(r => r.EXPENSE_ROUTES),
+    canActivate: [authGuard]
   },
-  
-  // 404 頁面
-  { 
-    path: '**', 
-    redirectTo: '/dashboard' 
+  {
+    path: 'user',
+    loadChildren: () => import('./features/user/user.routes').then(r => r.USER_ROUTES),
+    canActivate: [authGuard],
+    title: '使用者管理'
+  },
+  {
+    path: '**',
+    redirectTo: '/dashboard'
   }
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
+  imports: [RouterModule.forRoot(routes, {
+    enableTracing: false,
+    preloadingStrategy: PreloadAllModules,
+    onSameUrlNavigation: 'reload'
+  })],
   exports: [RouterModule]
 })
-export class AppRoutingModule {}
+export class AppRoutingModule { }

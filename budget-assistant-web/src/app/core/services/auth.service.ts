@@ -6,7 +6,9 @@ import { environment } from '../../../environments/environment';
 import { LoginRequest, RegisterRequest, LoginResponse, User } from '../models/auth.models';
 
 /**
- * 認證服務
+ * 增強版認證服務 - 新增使用者資料更新功能
+ * 檔案路徑：budget-assistant-web/src/app/core/services/auth.service.ts
+ * 
  * 為什麼使用 @Injectable({ providedIn: 'root' })？
  * 1. 創建全域單例服務
  * 2. 自動在根注入器中註冊
@@ -73,6 +75,24 @@ export class AuthService {
   }
 
   /**
+   * 更新當前使用者資料
+   * 當使用者在個人資料頁面更新資料後，同步更新認證服務中的使用者狀態
+   * 為什麼需要這個方法？
+   * 確保全域使用者狀態與最新資料保持一致
+   */
+  updateCurrentUser(user: User): void {
+    this.currentUserSubject.next(user);
+  }
+
+  /**
+   * 取得當前使用者
+   * 同步方法，返回當前的使用者資料
+   */
+  getCurrentUser(): User | null {
+    return this.currentUserSubject.value;
+  }
+
+  /**
    * 登出處理
    */
   logout(): void {
@@ -123,7 +143,8 @@ export class AuthService {
       const user: User = {
         id: response.userId!,
         username: response.username!,
-        displayName: response.username! // 如果後端沒有回傳 displayName，使用 username
+        displayName: response.username!, // 如果後端沒有回傳 displayName，使用 username
+        email: '' // 暫時設為空字串，後續可從使用者資料 API 取得
       };
       
       this.currentUserSubject.next(user);
@@ -144,7 +165,8 @@ export class AuthService {
         const user: User = {
           id: payload.nameid || payload.sub,
           username: payload.unique_name || payload.name,
-          displayName: payload.DisplayName || payload.unique_name || payload.name
+          displayName: payload.DisplayName || payload.unique_name || payload.name,
+          email: payload.email || ''
         };
         
         this.currentUserSubject.next(user);
@@ -154,5 +176,26 @@ export class AuthService {
         this.logout();
       }
     }
+  }
+
+  /**
+   * 刷新使用者資料
+   * 從伺服器重新載入使用者完整資料
+   */
+  refreshUserProfile(): Observable<User> {
+    return this.http.get<User>(`${this.apiUrl}/user/profile`)
+      .pipe(
+        tap(user => {
+          this.updateCurrentUser(user);
+        })
+      );
+  }
+
+  /**
+   * 檢查是否已認證
+   * 同步方法，返回當前的認證狀態
+   */
+  isAuthenticated(): boolean {
+    return this.isAuthenticatedSubject.value;
   }
 }

@@ -105,3 +105,67 @@
     padding: 12px;
   }
 }
+
+/**
+ * 導航選單樣式更新
+ * 檔案路徑：budget-assistant-web/src/app/layout/layout.component.scss
+ * 
+ * 新增導航區域標題的樣式
+ */
+
+// 原有的樣式保持不變，新增以下樣式：
+
+// === 導航區域標題 ===
+.nav-section-header {
+  padding: 16px 16px 8px 16px;
+  margin-top: 8px;
+
+  span {
+    font-size: 12px;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+// === 導航項目間距調整 ===
+.mat-mdc-nav-list {
+  .mat-mdc-list-item {
+    margin-bottom: 4px;
+
+    // 圖示和文字的對齊
+    .mat-mdc-list-item-icon {
+      margin-right: 16px;
+      color: #666;
+    }
+
+    // 懸停效果
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+      border-radius: 8px;
+      margin: 4px 8px;
+      
+      .mat-mdc-list-item-icon {
+        color: #1976d2;
+      }
+    }
+  }
+
+  // 分隔線樣式
+  mat-divider {
+    margin: 12px 0;
+    border-color: #e0e0e0;
+  }
+}
+
+// === 響應式設計 ===
+@media (max-width: 768px) {
+  .nav-section-header {
+    padding: 12px 12px 6px 12px;
+    
+    span {
+      font-size: 11px;
+    }
+  }
+}

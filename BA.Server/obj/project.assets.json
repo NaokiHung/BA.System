@@ -3536,11 +3536,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "G:\\1.Project\\0.Visual Studio Project\\4.DotnetAngular\\20250602_new\\BA.Server\\BA.Server.csproj",
+      "projectUniqueName": "G:\\1.Project\\0.Visual Studio Project\\4.DotnetAngular\\BA.System\\BA.Server\\BA.Server.csproj",
       "projectName": "BA.Server",
-      "projectPath": "G:\\1.Project\\0.Visual Studio Project\\4.DotnetAngular\\20250602_new\\BA.Server\\BA.Server.csproj",
+      "projectPath": "G:\\1.Project\\0.Visual Studio Project\\4.DotnetAngular\\BA.System\\BA.Server\\BA.Server.csproj",
       "packagesPath": "C:\\Users\\grayr\\.nuget\\packages\\",
-      "outputPath": "G:\\1.Project\\0.Visual Studio Project\\4.DotnetAngular\\20250602_new\\BA.Server\\obj\\",
+      "outputPath": "G:\\1.Project\\0.Visual Studio Project\\4.DotnetAngular\\BA.System\\BA.Server\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

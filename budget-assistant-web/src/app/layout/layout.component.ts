@@ -24,7 +24,6 @@ import { User } from '../core/models/auth.models';
   standalone: true,
   imports: [
     CommonModule,
-    RouterOutlet,
     MatToolbarModule,
     MatSidenavModule,
     MatListModule,
@@ -87,4 +86,6 @@ export class LayoutComponent implements OnInit, OnDestroy {
     this.router.navigate([route]);
     this.sidenavOpened = false; // 手機版導航後關閉側邊欄
   }
+
+  
 }

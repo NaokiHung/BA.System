@@ -1,0 +1,501 @@
+/**
+ * 使用者資料管理頁面樣式
+ * 檔案路徑：budget-assistant-web/src/app/features/user/profile/user-profile.component.scss
+ * 
+ * 為什麼使用 SCSS？
+ * 1. 支援巢狀選擇器，程式碼更有組織
+ * 2. 變數和 mixin 功能提高可維護性
+ * 3. 與 Angular Material 主題系統整合
+ */
+
+// === 變數定義 ===
+$primary-color: #1976d2;
+$accent-color: #ff4081;
+$warn-color: #f44336;
+$background-color: #f5f5f5;
+$card-background: #ffffff;
+$text-primary: #333333;
+$text-secondary: #666666;
+$text-hint: #999999;
+
+// === 主容器樣式 ===
+.user-profile-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+
+  // 確保在不同螢幕尺寸下都有良好的體驗
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
+}
+
+// === 頁面標題區域 ===
+.page-header {
+  text-align: center;
+  margin-bottom: 30px;
+
+  h1 {
+    font-size: 28px;
+    font-weight: 500;
+    color: $text-primary;
+    margin-bottom: 8px;
+    
+    // 響應式字體大小
+    @media (max-width: 480px) {
+      font-size: 24px;
+    }
+  }
+
+  p {
+    color: $text-secondary;
+    font-size: 16px;
+    
+    @media (max-width: 480px) {
+      font-size: 14px;
+    }
+  }
+}
+
+// === 使用者資訊卡片 ===
+.user-info-card {
+  margin-bottom: 20px;
+  background-color: $card-background;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+
+  .mat-mdc-card-header {
+    padding: 20px;
+
+    .mat-mdc-card-title {
+      font-size: 20px;
+      font-weight: 500;
+      color: $text-primary;
+    }
+
+    .mat-mdc-card-subtitle {
+      color: $text-secondary;
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    // 頭像圖示樣式
+    mat-icon[mat-card-avatar] {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      color: $text-secondary;
+    }
+  }
+}
+
+// === 管理功能卡片 ===
+.management-card {
+  background-color: $card-background;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+
+  // 移除標籤內容的預設內距，讓我們自己控制
+  .mat-mdc-tab-body-content {
+    padding: 0;
+    overflow: visible;
+  }
+
+  // 標籤頭部樣式
+  .mat-mdc-tab-group {
+    .mat-mdc-tab-labels {
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .mat-mdc-tab {
+      min-width: 120px;
+      
+      @media (max-width: 600px) {
+        min-width: 80px;
+        font-size: 12px;
+      }
+    }
+  }
+}
+
+// === 標籤內容樣式 ===
+.tab-content {
+  padding: 30px;
+
+  // 響應式內距
+  @media (max-width: 768px) {
+    padding: 20px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 16px;
+  }
+
+  // 標籤標題
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: 500;
+    color: $text-primary;
+    margin-bottom: 8px;
+
+    mat-icon {
+      color: $primary-color;
+    }
+  }
+
+  h4 {
+    font-size: 16px;
+    font-weight: 500;
+    color: $text-primary;
+    margin: 20px 0 16px 0;
+  }
+
+  // 標籤描述
+  .tab-description {
+    color: $text-secondary;
+    margin-bottom: 30px;
+    line-height: 1.5;
+
+    @media (max-width: 768px) {
+      margin-bottom: 20px;
+    }
+  }
+}
+
+// === 表單樣式 ===
+.full-width {
+  width: 100%;
+  margin-bottom: 20px;
+
+  // 表單欄位間距調整
+  &:last-of-type {
+    margin-bottom: 0;
+  }
+}
+
+// 表單操作按鈕
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 30px;
+
+  // 響應式按鈕布局
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+    margin-top: 20px;
+
+    button {
+      width: 100%;
+      margin-bottom: 8px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  button {
+    height: 48px;
+    min-width: 120px;
+    font-weight: 500;
+
+    // 按鈕內的圖示和載入器對齊
+    mat-spinner {
+      margin-right: 8px;
+    }
+
+    mat-icon {
+      margin-right: 8px;
+    }
+
+    // 確保按鈕文字不會因載入狀態改變而跳動
+    span {
+      min-width: 60px;
+      text-align: left;
+    }
+  }
+}
+
+// === 帳戶資訊網格 ===
+.account-info-grid {
+  display: grid;
+  gap: 20px;
+  margin-bottom: 30px;
+
+  // 響應式網格布局
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 767px) {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .info-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+
+    // 懸停效果
+    &:hover {
+      background-color: #f0f0f0;
+    }
+
+    mat-icon {
+      color: $text-secondary;
+      flex-shrink: 0;
+    }
+
+    .info-content {
+      display: flex;
+      flex-direction: column;
+      min-width: 0; // 防止文字溢出
+
+      .info-label {
+        font-size: 12px;
+        color: $text-hint;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 2px;
+      }
+
+      .info-value {
+        font-size: 16px;
+        color: $text-primary;
+        font-weight: 500;
+        word-break: break-word; // 長文字自動換行
+      }
+    }
+  }
+}
+
+// === 分隔線 ===
+.section-divider {
+  margin: 30px 0;
+  border-color: #e0e0e0;
+
+  @media (max-width: 768px) {
+    margin: 20px 0;
+  }
+}
+
+// === 統計網格 ===
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+
+  // 響應式調整
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    background-color: #f5f5f5;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+
+    // 懸停效果
+    &:hover {
+      background-color: #eeeeee;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+    }
+
+    .stat-content {
+      display: flex;
+      flex-direction: column;
+
+      .stat-number {
+        font-size: 24px;
+        font-weight: 600;
+        color: $text-primary;
+        line-height: 1.2;
+      }
+
+      .stat-label {
+        font-size: 14px;
+        color: $text-secondary;
+        margin-top: 2px;
+      }
+    }
+
+    // 響應式調整統計項目
+    @media (max-width: 480px) {
+      padding: 16px;
+
+      mat-icon {
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+      }
+
+      .stat-content {
+        .stat-number {
+          font-size: 20px;
+        }
+
+        .stat-label {
+          font-size: 12px;
+        }
+      }
+    }
+  }
+}
+
+// === 表單欄位自訂樣式 ===
+.mat-mdc-form-field {
+  &.full-width {
+    // 確保表單欄位在小螢幕上有適當的間距
+    .mat-mdc-text-field-wrapper {
+      @media (max-width: 480px) {
+        .mat-mdc-form-field-infix {
+          padding: 14px 0;
+        }
+      }
+    }
+  }
+
+  // 錯誤訊息樣式
+  .mat-mdc-form-field-error {
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  // 提示文字樣式
+  .mat-mdc-form-field-hint {
+    font-size: 12px;
+    color: $text-hint;
+    line-height: 1.4;
+  }
+}
+
+// === 密碼欄位特殊樣式 ===
+.mat-mdc-form-field {
+  // 密碼可見性切換按鈕
+  .mat-mdc-icon-button[matSuffix] {
+    width: 40px;
+    height: 40px;
+    
+    mat-icon {
+      font-size: 20px;
+      color: $text-secondary;
+    }
+
+    &:hover mat-icon {
+      color: $primary-color;
+    }
+  }
+}
+
+// === 載入狀態樣式 ===
+mat-spinner {
+  &[diameter="20"] {
+    width: 20px !important;
+    height: 20px !important;
+    
+    svg {
+      width: 20px !important;
+      height: 20px !important;
+    }
+  }
+}
+
+// === 成功和錯誤訊息樣式 ===
+.success-snackbar {
+  background-color: #4caf50 !important;
+  color: white !important;
+}
+
+.error-snackbar {
+  background-color: $warn-color !important;
+  color: white !important;
+}
+
+// === 輔助功能和可訪問性 ===
+// 確保焦點狀態清晰可見
+button:focus,
+input:focus,
+.mat-mdc-tab:focus {
+  outline: 2px solid $primary-color;
+  outline-offset: 2px;
+}
+
+// 高對比度模式支援
+@media (prefers-contrast: high) {
+  .info-item,
+  .stat-item {
+    border: 1px solid $text-secondary;
+  }
+
+  .account-info-grid .info-item:hover,
+  .stats-grid .stat-item:hover {
+    border-color: $primary-color;
+  }
+}
+
+// === 深色主題支援 ===
+@media (prefers-color-scheme: dark) {
+  .user-profile-container {
+    .info-item,
+    .stat-item {
+      background-color: #2a2a2a;
+      
+      &:hover {
+        background-color: #333333;
+      }
+    }
+
+    .info-content .info-value,
+    .stat-content .stat-number {
+      color: #ffffff;
+    }
+
+    .info-content .info-label,
+    .stat-content .stat-label {
+      color: #cccccc;
+    }
+  }
+}
+
+// === 列印樣式 ===
+@media print {
+  .user-profile-container {
+    .form-actions,
+    .mat-mdc-tab-labels {
+      display: none;
+    }
+
+    .management-card {
+      box-shadow: none;
+      border: 1px solid #000000;
+    }
+
+    .tab-content {
+      padding: 20px;
+    }
+  }
+}

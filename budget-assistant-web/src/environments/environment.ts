@@ -7,7 +7,7 @@
  */
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:5000/api',  // 對應後端 API 位址
+  apiUrl: 'http://localhost:5091/api',  // 對應後端 API 位址
   appName: '個人理財管理系統',
   version: '1.0.0',
   enableLogging: true,                   // 開發環境啟用詳細日誌

@@ -19,7 +19,7 @@ builder.ConfigureLogging();
 builder.Services.AddDatabaseServices(builder.Configuration, builder.Environment);
 
 // 3. Repository 依賴注入配置
-builder.Services.AddRepositoryServices();
+builder.Services.AddRepositories();
 
 // 4. 業務服務層配置
 builder.Services.AddBusinessServices();
