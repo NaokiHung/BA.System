@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "Ec8lw0mlbEmbZzg9YK5QpuZX/cHgVXU2JIJfKUnFTC0=",
+  "Source": "BA.Server",
+  "BasePath": "_content/BA.Server",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

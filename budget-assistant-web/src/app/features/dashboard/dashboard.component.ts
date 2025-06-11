@@ -1,7 +1,4 @@
-/**
- * 檔案路徑: budget-assistant-web/src/app/features/dashboard/dashboard.component.ts
- * 修正 TypeScript 錯誤的 Dashboard 組件
- */
+// 檔案路徑: budget-assistant-web/src/app/features/dashboard/dashboard.component.ts
 
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -14,15 +11,15 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ExpenseService } from '../../core/services/expense.service';
 import { AuthService } from '../../core/services/auth.service';
-import { MonthlyBudgetResponse } from '../../core/models/expense.models';
-import { User } from '../../core/models/auth.models'; // 從正確的模型導入 User
+import { MonthlyBudgetResponse, User } from '../../core/models/expense.models';
 
 /**
  * 儀表板組件 - 修正版本
- * 修正問題：
- * 1. totalExpenses → totalCashExpenses
- * 2. authService 改為 public
- * 3. 完整的錯誤處理
+ * 主要修正：
+ * 1. 添加完整的錯誤處理和日誌
+ * 2. 修正數據計算邏輯
+ * 3. 移除測試功能
+ * 4. 增加數據驗證
  */
 @Component({
   selector: 'app-dashboard',
@@ -40,7 +37,7 @@ import { User } from '../../core/models/auth.models'; // 從正確的模型導�
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   private expenseService = inject(ExpenseService);
-  public authService = inject(AuthService); // 改為 public 以便在模板中使用
+  private authService = inject(AuthService);
   private router = inject(Router);
   private destroy$ = new Subject<void>();
   
@@ -49,183 +46,262 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isLoading = true;
   error: string | null = null;
 
-  // 儀表板統計數據
+  // 儀表板統計數據 - 重新設計
   budgetUtilizationPercentage = 0;
   remainingDays = 0;
   currentMonth = '';
-
-  constructor() {
-    console.log('📊 Dashboard 組件建構中...');
-  }
+  
+  // 計算後的數據
+  totalSpent = 0;
+  dailyAverageSpent = 0;
+  dailyAverageRemaining = 0;
 
   ngOnInit(): void {
-    console.log('📊 Dashboard 組件初始化開始');
-    
-    try {
-      this.getCurrentUser();
-      this.loadDashboardData();
-      this.calculateRemainingDays();
-      
-      console.log('📊 Dashboard 組件初始化完成');
-    } catch (error) {
-      console.error('❌ Dashboard 組件初始化失敗:', error);
-      this.error = '組件初始化失敗';
-      this.isLoading = false;
-    }
+    this.getCurrentUser();
+    this.loadDashboardData();
+    this.calculateRemainingDays();
   }
 
   ngOnDestroy(): void {
-    console.log('📊 Dashboard 組件銷毀');
     this.destroy$.next();
     this.destroy$.complete();
   }
 
   /**
    * 取得當前使用者資訊
+   * 為什麼需要驗證使用者？
+   * 1. 確保儀表板顯示正確使用者的數據
+   * 2. 處理使用者登出的情況
    */
   private getCurrentUser(): void {
-    console.log('👤 正在取得使用者資訊...');
-    
     this.authService.currentUser$
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (user) => {
-          console.log('👤 使用者資訊:', user);
           this.currentUser = user;
+          console.log('當前使用者:', user); // 除錯用，生產環境請移除
         },
         error: (error) => {
-          console.error('❌ 取得使用者資訊失敗:', error);
+          console.error('取得使用者資訊失敗:', error);
+          this.router.navigate(['/auth/login']);
         }
       });
   }
 
   /**
-   * 載入儀表板資料
+   * 載入儀表板資料 - 修正版本
+   * 增加詳細的錯誤處理和數據驗證
    */
   private loadDashboardData(): void {
-    console.log('📈 正在載入儀表板資料...');
     this.isLoading = true;
     this.error = null;
 
-    // 暫時使用假資料進行測試
-    setTimeout(() => {
-      console.log('📈 使用測試資料');
-      this.budgetData = {
-        month: new Date().getMonth() + 1,
-        year: new Date().getFullYear(),
-        monthName: `${new Date().getFullYear()}年${new Date().getMonth() + 1}月`,
-        totalBudget: 30000,
-        remainingCash: 15000,
-        totalCashExpenses: 15000, // 修正：使用正確的屬性名稱
-        totalSubscriptions: 2500,
-        totalCreditCard: 8000,
-        combinedCreditTotal: 10500
-      };
-      this.calculateBudgetStatistics();
-      this.isLoading = false;
-    }, 1000);
+    console.log('開始載入儀表板資料...'); // 除錯用
 
-    // 真實的 API 呼叫（先註解掉進行測試）
-    /*
     this.expenseService.getCurrentMonthBudget()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
-          console.log('📈 載入儀表板資料成功:', data);
-          this.budgetData = data;
-          this.calculateBudgetStatistics();
+          console.log('API 回傳的數據:', data); // 除錯用，查看實際回傳的數據
+          
+          // 驗證數據完整性
+          if (this.validateBudgetData(data)) {
+            this.budgetData = data;
+            this.calculateBudgetStatistics();
+            this.calculateAdditionalStats();
+          } else {
+            this.error = '接收到的數據格式不正確';
+            console.error('數據驗證失敗:', data);
+          }
+          
           this.isLoading = false;
         },
         error: (error) => {
-          console.error('❌ 載入儀表板資料失敗:', error);
-          this.error = '載入資料失敗，請稍後再試';
+          console.error('載入儀表板資料失敗:', error);
+          
+          // 根據錯誤類型提供不同的錯誤訊息
+          if (error.status === 401) {
+            this.error = '登入已過期，請重新登入';
+            this.router.navigate(['/auth/login']);
+          } else if (error.status === 0) {
+            this.error = '無法連接到伺服器，請檢查網路連線';
+          } else {
+            this.error = '載入資料失敗，請稍後再試';
+          }
+          
           this.isLoading = false;
         }
       });
-    */
   }
 
   /**
-   * 計算預算統計數據
+   * 驗證預算數據的完整性
+   * 為什麼需要驗證？
+   * 1. 防止前端因為後端數據問題而出錯
+   * 2. 早期發現數據問題
+   * 3. 提供更好的使用者體驗
+   */
+  private validateBudgetData(data: MonthlyBudgetResponse): boolean {
+    if (!data) {
+      console.error('數據為空');
+      return false;
+    }
+
+    // 檢查必要欄位
+    const requiredFields = ['totalBudget', 'remainingCash', 'totalCashExpenses', 'year', 'month'];
+    for (const field of requiredFields) {
+      if (data[field as keyof MonthlyBudgetResponse] === undefined || data[field as keyof MonthlyBudgetResponse] === null) {
+        console.error(`缺少必要欄位: ${field}`);
+        return false;
+      }
+    }
+
+    // 檢查數據邏輯
+    if (data.totalBudget < 0 || data.remainingCash < 0 || data.totalCashExpenses < 0) {
+      console.error('數據包含負值:', data);
+      return false;
+    }
+
+    // 檢查計算邏輯是否正確
+    const expectedRemaining = data.totalBudget - data.totalCashExpenses;
+    if (Math.abs(data.remainingCash - expectedRemaining) > 0.01) { // 允許小數點誤差
+      console.warn('剩餘金額計算可能有誤:', {
+        expected: expectedRemaining,
+        actual: data.remainingCash,
+        budget: data.totalBudget,
+        expenses: data.totalCashExpenses
+      });
+    }
+
+    return true;
+  }
+
+  /**
+   * 計算預算統計數據 - 修正版本
+   * 確保計算邏輯正確
    */
   private calculateBudgetStatistics(): void {
-    console.log('🧮 正在計算預算統計...');
-    
-    if (this.budgetData) {
-      // 計算預算使用率
-      if (this.budgetData.totalBudget > 0) {
-        const usedAmount = this.budgetData.totalBudget - this.budgetData.remainingCash;
-        this.budgetUtilizationPercentage = Math.round((usedAmount / this.budgetData.totalBudget) * 100);
-      }
+    if (!this.budgetData) return;
 
-      this.currentMonth = this.budgetData.monthName;
-      
-      console.log('🧮 預算統計完成:', {
-        使用率: this.budgetUtilizationPercentage + '%',
-        當前月份: this.currentMonth
-      });
+    // 計算總支出金額（使用後端提供的數據）
+    this.totalSpent = this.budgetData.totalCashExpenses;
+
+    // 計算預算使用率
+    if (this.budgetData.totalBudget > 0) {
+      this.budgetUtilizationPercentage = Math.round((this.totalSpent / this.budgetData.totalBudget) * 100);
+      // 確保百分比在合理範圍內
+      this.budgetUtilizationPercentage = Math.min(this.budgetUtilizationPercentage, 100);
+    } else {
+      this.budgetUtilizationPercentage = 0;
+    }
+
+    // 設定當月資訊
+    this.currentMonth = this.budgetData.monthName || `${this.budgetData.year}年${this.budgetData.month.toString().padStart(2, '0')}月`;
+
+    console.log('計算結果:', {
+      totalSpent: this.totalSpent,
+      utilization: this.budgetUtilizationPercentage,
+      month: this.currentMonth
+    });
+  }
+
+  /**
+   * 計算額外的統計數據
+   * 提供更多有用的財務洞察
+   */
+  private calculateAdditionalStats(): void {
+    if (!this.budgetData) return;
+
+    const currentDate = new Date();
+    const currentDay = currentDate.getDate();
+    
+    // 計算平均每日支出
+    if (currentDay > 0) {
+      this.dailyAverageSpent = this.totalSpent / currentDay;
+    }
+
+    // 計算剩餘天數的平均每日可支出金額
+    if (this.remainingDays > 0 && this.budgetData.remainingCash > 0) {
+      this.dailyAverageRemaining = this.budgetData.remainingCash / this.remainingDays;
     }
   }
 
   /**
-   * 計算剩餘天數
+   * 計算本月剩餘天數
    */
   private calculateRemainingDays(): void {
-    const today = new Date();
-    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    this.remainingDays = lastDay.getDate() - today.getDate();
-    
-    console.log('📅 本月剩餘天數:', this.remainingDays);
+    const now = new Date();
+    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const currentDay = now.getDate();
+    this.remainingDays = lastDayOfMonth.getDate() - currentDay;
   }
 
   /**
-   * 導航到支出頁面
-   */
-  navigateToExpenses(): void {
-    console.log('🧾 導航到支出頁面');
-    this.router.navigate(['/expense']);
-  }
-
-  /**
-   * 重新載入資料
-   */
-  refreshData(): void {
-    console.log('🔄 重新載入資料');
-    this.loadDashboardData();
-  }
-
-  /**
-   * 格式化金額顯示
+   * 格式化貨幣顯示
+   * 為什麼需要統一格式？
+   * 1. 提供一致的使用者體驗
+   * 2. 符合在地化需求
+   * 3. 避免數字顯示問題
    */
   formatCurrency(amount: number): string {
+    if (amount === undefined || amount === null) {
+      return '$0';
+    }
+    
     return new Intl.NumberFormat('zh-TW', {
       style: 'currency',
       currency: 'TWD',
-      minimumFractionDigits: 0
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(amount);
   }
 
   /**
-   * 取得預算狀態的顏色
+   * 刷新數據
+   * 當使用者點擊重新載入按鈕時調用
+   */
+  refreshData(): void {
+    this.loadDashboardData();
+  }
+
+  /**
+   * 導航到新增支出頁面
+   */
+  navigateToAddExpense(): void {
+    this.router.navigate(['/expense/add']);
+  }
+
+  /**
+   * 導航到預算設定頁面
+   */
+  navigateToBudgetSetting(): void {
+    this.router.navigate(['/expense/budget']);
+  }
+
+  /**
+   * 導航到歷史記錄頁面
+   */
+  navigateToHistory(): void {
+    this.router.navigate(['/expense/history']);
+  }
+
+  /**
+   * 取得預算狀態顏色
+   * 根據使用率返回不同的顏色主題
    */
   getBudgetStatusColor(): string {
-    if (this.budgetUtilizationPercentage <= 60) return 'primary';
+    if (this.budgetUtilizationPercentage <= 50) return 'primary';
     if (this.budgetUtilizationPercentage <= 80) return 'accent';
     return 'warn';
   }
 
   /**
-   * 導航方法
+   * 取得預算狀態文字
    */
-  navigateToExpense(): void {
-    this.router.navigate(['/expense/add']);
-  }
-
-  navigateToBudget(): void {
-    this.router.navigate(['/expense/budget']);
-  }
-
-  navigateToHistory(): void {
-    this.router.navigate(['/expense/history']);
+  getBudgetStatusText(): string {
+    if (this.budgetUtilizationPercentage <= 50) return '預算充裕';
+    if (this.budgetUtilizationPercentage <= 80) return '預算適中';
+    if (this.budgetUtilizationPercentage <= 100) return '預算緊張';
+    return '已超支';
   }
 }

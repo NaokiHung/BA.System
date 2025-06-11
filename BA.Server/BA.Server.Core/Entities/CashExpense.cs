@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace BA.Server.Entities
+namespace BA.Server.Core.Entities  // 保持原有的命名空間！
 {
     public class CashExpense
     {
@@ -29,7 +29,7 @@ namespace BA.Server.Entities
         
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         
-        // 新增 UpdatedDate 屬性
+        // 只新增這一行！
         public DateTime? UpdatedDate { get; set; }
     }
 }
