@@ -334,7 +334,7 @@ namespace BA.Server.API.Controllers
         /// 更新現金支出記錄
         /// </summary>
         [HttpPut("cash/{expenseId}")]
-        public async Task<ActionResult<ExpenseResponse>> UpdateCashExpense(int expenseId, [FromBody] UpdateCashExpenseRequest request)
+        public async Task<ActionResult<ExpenseResponse>> UpdateCashExpense(int expenseId, [FromBody] UpdateExpenseRequest request)
         {
             try
             {
