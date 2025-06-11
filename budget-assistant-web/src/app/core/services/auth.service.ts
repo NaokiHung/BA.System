@@ -1,19 +1,18 @@
+/**
+ * 檔案路徑: budget-assistant-web/src/app/core/services/auth.service.ts
+ * 最終修正版本的 AuthService，解決 displayName 問題
+ */
+
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap, map } from 'rxjs';
+import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { LoginRequest, RegisterRequest, LoginResponse, User } from '../models/auth.models';
 
 /**
- * 增強版認證服務 - 新增使用者資料更新功能
- * 檔案路徑：budget-assistant-web/src/app/core/services/auth.service.ts
- * 
- * 為什麼使用 @Injectable({ providedIn: 'root' })？
- * 1. 創建全域單例服務
- * 2. 自動在根注入器中註冊
- * 3. 避免重複創建實例
- * 4. 所有組件共享相同的認證狀態
+ * 認證服務
+ * 完整處理 JWT Token 中的所有 claims，包括 displayName
  */
 @Injectable({
   providedIn: 'root'
@@ -22,13 +21,6 @@ export class AuthService {
   private apiUrl = environment.apiUrl;
   private tokenKey = environment.tokenKey;
   
-  /**
-   * 使用 BehaviorSubject 管理認證狀態
-   * 為什麼選擇 BehaviorSubject？
-   * 1. 有初始值，訂閱時立即獲得當前狀態
-   * 2. 支援多個組件同時訂閱
-   * 3. 狀態變更時自動通知所有訂閱者
-   */
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
 
@@ -45,7 +37,6 @@ export class AuthService {
 
   /**
    * 使用者登入
-   * 與後端 AuthController.Login 對應
    */
   login(request: LoginRequest): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, request)
@@ -60,7 +51,6 @@ export class AuthService {
 
   /**
    * 使用者註冊
-   * 與後端 AuthController.Register 對應
    */
   register(request: RegisterRequest): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.apiUrl}/auth/register`, request);
@@ -68,42 +58,18 @@ export class AuthService {
 
   /**
    * 檢查使用者名稱是否可用
-   * 與後端 AuthController.CheckUsername 對應
    */
   checkUsername(username: string): Observable<{ available: boolean }> {
     return this.http.get<{ available: boolean }>(`${this.apiUrl}/auth/check-username/${username}`);
   }
 
   /**
-   * 更新當前使用者資料
-   * 當使用者在個人資料頁面更新資料後，同步更新認證服務中的使用者狀態
-   * 為什麼需要這個方法？
-   * 確保全域使用者狀態與最新資料保持一致
-   */
-  updateCurrentUser(user: User): void {
-    this.currentUserSubject.next(user);
-  }
-
-  /**
-   * 取得當前使用者
-   * 同步方法，返回當前的使用者資料
-   */
-  getCurrentUser(): User | null {
-    return this.currentUserSubject.value;
-  }
-
-  /**
    * 登出處理
    */
   logout(): void {
-    // 清除本地儲存的認證資訊
     localStorage.removeItem(this.tokenKey);
-    
-    // 重置認證狀態
     this.currentUserSubject.next(null);
     this.isAuthenticatedSubject.next(false);
-    
-    // 導向登入頁面
     this.router.navigate(['/auth/login']);
   }
 
@@ -119,83 +85,132 @@ export class AuthService {
    */
   isTokenValid(): boolean {
     const token = this.getToken();
-    if (!token) return false;
+    if (!token) {
+      console.log('🔍 Token 檢查: 沒有 Token');
+      return false;
+    }
 
     try {
       // 解析 JWT Token 檢查過期時間
       const payload = JSON.parse(atob(token.split('.')[1]));
-      const expirationDate = new Date(payload.exp * 1000);
-      return expirationDate > new Date();
-    } catch {
+      const currentTime = Math.floor(Date.now() / 1000);
+      
+      console.log('🔍 Token 檢查:', {
+        expires: new Date(payload.exp * 1000),
+        current: new Date(),
+        isValid: payload.exp > currentTime,
+        payload: payload // 顯示完整的 payload 進行除錯
+      });
+      
+      return payload.exp > currentTime;
+    } catch (error) {
+      console.error('❌ Token 解析失敗:', error);
       return false;
     }
   }
 
   /**
-   * 處理認證成功後的邏輯
+   * 處理認證成功
    */
   private handleAuthenticationSuccess(response: LoginResponse): void {
-    if (response.token) {
-      // 儲存 Token 到 localStorage
-      localStorage.setItem(this.tokenKey, response.token);
-      
-      // 更新使用者資訊
-      const user: User = {
-        id: response.userId!,
-        username: response.username!,
-        displayName: response.username!, // 如果後端沒有回傳 displayName，使用 username
-        email: '' // 暫時設為空字串，後續可從使用者資料 API 取得
-      };
-      
+    // 儲存 Token
+    localStorage.setItem(this.tokenKey, response.token!);
+    
+    // 從 Token 中解析完整的使用者資訊
+    const user = this.getUserFromToken(response.token!);
+    
+    if (user) {
       this.currentUserSubject.next(user);
       this.isAuthenticatedSubject.next(true);
+      console.log('✅ 認證成功，使用者:', user);
+    } else {
+      console.error('❌ 無法從 Token 中解析使用者資訊');
     }
   }
 
   /**
-   * 檢查本地儲存的 Token
-   * 應用程式啟動時調用，恢復認證狀態
+   * 檢查本地儲存的 Token 並初始化認證狀態
    */
   private checkStoredToken(): void {
+    console.log('🔍 檢查儲存的 Token...');
+    
+    const token = this.getToken();
+    
+    if (!token) {
+      console.log('❌ 沒有找到 Token');
+      this.isAuthenticatedSubject.next(false);
+      this.currentUserSubject.next(null);
+      return;
+    }
+
+    console.log('✅ 找到 Token，正在驗證...');
+    
+    // 檢查 Token 是否有效
     if (this.isTokenValid()) {
-      const token = this.getToken()!;
+      console.log('✅ Token 有效，正在解析使用者資訊...');
+      
       try {
         // 從 Token 中解析使用者資訊
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        const user: User = {
-          id: payload.nameid || payload.sub,
-          username: payload.unique_name || payload.name,
-          displayName: payload.DisplayName || payload.unique_name || payload.name,
-          email: payload.email || ''
-        };
-        
-        this.currentUserSubject.next(user);
-        this.isAuthenticatedSubject.next(true);
+        const user = this.getUserFromToken(token);
+        if (user) {
+          console.log('✅ 使用者資訊解析成功:', user);
+          this.currentUserSubject.next(user);
+          this.isAuthenticatedSubject.next(true);
+        } else {
+          console.log('❌ 無法解析使用者資訊');
+          this.clearAuthenticationState();
+        }
       } catch (error) {
-        // Token 格式錯誤，清除無效 Token
-        this.logout();
+        console.error('❌ 解析 Token 時發生錯誤:', error);
+        this.clearAuthenticationState();
       }
+    } else {
+      console.log('❌ Token 已過期或無效');
+      this.clearAuthenticationState();
     }
   }
 
   /**
-   * 刷新使用者資料
-   * 從伺服器重新載入使用者完整資料
+   * 從 Token 中解析使用者資訊
+   * 處理後端 JWT Token 中的所有可能的 claim 名稱
    */
-  refreshUserProfile(): Observable<User> {
-    return this.http.get<User>(`${this.apiUrl}/user/profile`)
-      .pipe(
-        tap(user => {
-          this.updateCurrentUser(user);
-        })
-      );
+  private getUserFromToken(token: string): User | null {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      
+      console.log('🔍 Token payload:', payload); // 除錯用
+      
+      // 後端使用的 claim 名稱對應：
+      // ClaimTypes.NameIdentifier -> "nameid" 或 "sub"
+      // ClaimTypes.Name -> "unique_name" 或 "name"  
+      // "DisplayName" -> "DisplayName"
+      
+      const user: User = {
+        id: payload.nameid || payload.sub || payload.userId || '',
+        username: payload.unique_name || payload.name || payload.username || '',
+        email: payload.email || '',
+        displayName: payload.DisplayName || payload.displayName || payload.unique_name || payload.name || payload.username || 'User'
+      };
+      
+      // 驗證必要欄位
+      if (!user.id || !user.username) {
+        console.error('❌ Token 中缺少必要的使用者資訊:', payload);
+        return null;
+      }
+      
+      return user;
+    } catch (error) {
+      console.error('❌ 解析 Token payload 失敗:', error);
+      return null;
+    }
   }
 
   /**
-   * 檢查是否已認證
-   * 同步方法，返回當前的認證狀態
+   * 清除認證狀態
    */
-  isAuthenticated(): boolean {
-    return this.isAuthenticatedSubject.value;
+  private clearAuthenticationState(): void {
+    localStorage.removeItem(this.tokenKey);
+    this.currentUserSubject.next(null);
+    this.isAuthenticatedSubject.next(false);
   }
 }

@@ -1,82 +1,33 @@
-<!--
-  主版面導航選單更新
-  檔案路徑：budget-assistant-web/src/app/layout/layout.component.html
-  
-  在原有的導航選單中新增使用者資料管理的連結
+<!-- 
+檔案路徑: budget-assistant-web/src/app/layout/layout.component.html
+簡化的 Layout 模板，用於除錯
 -->
 
-<!-- 側邊導航欄（更新後的版本） -->
-<mat-sidenav 
-  #drawer 
-  class="sidenav" 
-  fixedInViewport
-  [attr.role]="'navigation'"
-  [mode]="'over'"
-  [opened]="sidenavOpened">
-  
-  <!-- 使用者資訊區域 -->
-  <div class="user-info" *ngIf="currentUser$ | async as user">
-    <mat-icon class="user-avatar">account_circle</mat-icon>
-    <div class="user-details">
-      <span class="username">{{ user.displayName }}</span>
-      <span class="user-email">{{ user.username }}</span>
+<div class="layout-container">
+  <!-- 除錯資訊區塊 -->
+  <div class="debug-info" style="background: #f0f0f0; padding: 10px; margin-bottom: 20px; border-radius: 4px;">
+    <h4>🔧 應用程式除錯資訊</h4>
+    <p><strong>當前路由:</strong> {{ router.url }}</p>
+    <p><strong>認證狀態:</strong> {{ (isAuthenticated$ | async) ? '已登入' : '未登入' }}</p>
+    <p><strong>使用者:</strong> {{ (currentUser$ | async)?.username || '無' }}</p>
+    <p><strong>Token:</strong> {{ authService.getToken() ? '存在' : '不存在' }}</p>
+    
+    <div style="margin-top: 10px;">
+      <button (click)="navigateTo('/auth/login')" style="margin-right: 10px;">前往登入</button>
+      <button (click)="navigateTo('/dashboard')">前往儀表板</button>
+      <button (click)="clearStorage()" style="margin-left: 10px;">清除儲存</button>
     </div>
   </div>
 
-  <mat-divider></mat-divider>
-
-  <!-- 主要功能導航選單 -->
-  <mat-nav-list>
-    <a mat-list-item (click)="navigateTo('/dashboard')">
-      <mat-icon matListItemIcon>dashboard</mat-icon>
-      <span matListItemTitle>儀表板</span>
-    </a>
+  <!-- 主要內容區域 -->
+  <div class="main-content" style="min-height: 400px; border: 2px solid #ccc; padding: 20px;">
+    <h3>主要內容區域</h3>
+    <p>這裡應該顯示路由組件的內容</p>
     
-    <a mat-list-item (click)="navigateTo('/expense/add')">
-      <mat-icon matListItemIcon>add</mat-icon>
-      <span matListItemTitle>新增支出</span>
-    </a>
-    
-    <a mat-list-item (click)="navigateTo('/expense/budget')">
-      <mat-icon matListItemIcon>savings</mat-icon>
-      <span matListItemTitle>預算設定</span>
-    </a>
-    
-    <a mat-list-item (click)="navigateTo('/expense/history')">
-      <mat-icon matListItemIcon>history</mat-icon>
-      <span matListItemTitle>支出記錄</span>
-    </a>
-
-    <mat-divider></mat-divider>
-    
-    <!-- 新增：使用者管理區域 -->
-    <div class="nav-section-header">
-      <span>帳戶管理</span>
+    <!-- 路由出口 -->
+    <div style="border: 1px dashed #999; padding: 20px; margin-top: 20px;">
+      <h4>📍 Router Outlet：</h4>
+      <router-outlet></router-outlet>
     </div>
-    
-    <a mat-list-item (click)="navigateTo('/user/profile')">
-      <mat-icon matListItemIcon>manage_accounts</mat-icon>
-      <span matListItemTitle>個人資料</span>
-    </a>
-
-    <!-- 未來可擴展的使用者功能 -->
-    <!--
-    <a mat-list-item (click)="navigateTo('/user/preferences')">
-      <mat-icon matListItemIcon>settings</mat-icon>
-      <span matListItemTitle>偏好設定</span>
-    </a>
-    
-    <a mat-list-item (click)="navigateTo('/user/security')">
-      <mat-icon matListItemIcon>security</mat-icon>
-      <span matListItemTitle>安全設定</span>
-    </a>
-    -->
-
-    <mat-divider></mat-divider>
-    
-    <a mat-list-item (click)="logout()">
-      <mat-icon matListItemIcon>logout</mat-icon>
-      <span matListItemTitle>登出</span>
-    </a>
-  </mat-nav-list>
-</mat-sidenav>
+  </div>
+</div>

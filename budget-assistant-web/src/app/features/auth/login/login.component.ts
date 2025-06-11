@@ -1,3 +1,8 @@
+/**
+ * 檔案路徑: budget-assistant-web/src/app/features/auth/login/login.component.ts
+ * 完整的登入組件
+ */
+
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -12,14 +17,6 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService } from '../../../core/services/auth.service';
 import { LoginRequest } from '../../../core/models/auth.models';
 
-/**
- * 登入組件 - Angular 19 獨立元件
- * 為什麼使用響應式表單？
- * 1. 更好的型別安全性
- * 2. 更容易進行單元測試
- * 3. 支援複雜的驗證邏輯
- * 4. 更好的效能（不依賴雙向綁定）
- */
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -47,35 +44,42 @@ export class LoginComponent implements OnInit {
   isLoading = false;
   hidePassword = true;
 
+  constructor() {
+    console.log('🔑 LoginComponent 初始化');
+  }
+
   ngOnInit(): void {
     this.createForm();
+    console.log('🔑 LoginComponent ngOnInit 完成');
   }
 
   /**
    * 建立登入表單
-   * 為什麼要分離表單建立邏輯？
-   * 1. 提高程式碼可讀性
-   * 2. 方便單元測試
-   * 3. 易於維護和修改驗證規則
    */
   private createForm(): void {
     this.loginForm = this.fb.group({
       username: ['', [Validators.required, Validators.maxLength(50)]],
       password: ['', [Validators.required, Validators.minLength(6)]]
     });
+    
+    console.log('📝 登入表單建立完成');
   }
 
   /**
    * 提交登入表單
    */
   onSubmit(): void {
+    console.log('📤 提交登入表單');
+    
     if (this.loginForm.valid && !this.isLoading) {
       this.isLoading = true;
       
       const loginRequest: LoginRequest = this.loginForm.value;
+      console.log('📨 登入請求:', { username: loginRequest.username });
       
       this.authService.login(loginRequest).subscribe({
         next: (response) => {
+          console.log('✅ 登入回應:', response);
           if (response.success) {
             this.snackBar.open('登入成功！', '關閉', { duration: 3000 });
             this.router.navigate(['/dashboard']);
@@ -85,12 +89,13 @@ export class LoginComponent implements OnInit {
           this.isLoading = false;
         },
         error: (error) => {
-          console.error('登入錯誤:', error);
+          console.error('❌ 登入錯誤:', error);
           this.showError('登入失敗，請檢查網路連線或稍後再試。');
           this.isLoading = false;
         }
       });
     } else {
+      console.log('❌ 表單無效，標記所有欄位');
       this.markFormGroupTouched();
     }
   }
@@ -99,6 +104,7 @@ export class LoginComponent implements OnInit {
    * 導航到註冊頁面
    */
   goToRegister(): void {
+    console.log('📝 導航到註冊頁面');
     this.router.navigate(['/auth/register']);
   }
 
@@ -137,7 +143,7 @@ export class LoginComponent implements OnInit {
   }
 
   /**
-   * 標記所有表單控制項為已觸碰，觸發驗證訊息顯示
+   * 標記所有表單控制項為已觸碰
    */
   private markFormGroupTouched(): void {
     Object.keys(this.loginForm.controls).forEach(key => {

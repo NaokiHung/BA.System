@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using BA.Server.Core.Entities;
+using BA.Server.Entities;
 
-namespace BA.Server.Data.Contexts
+namespace BA.Server.Data
 {
     public class ExpenseDbContext : DbContext
     {

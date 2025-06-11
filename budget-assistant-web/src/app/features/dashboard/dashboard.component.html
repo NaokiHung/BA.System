@@ -1,148 +1,181 @@
-<!--
-  儀表板頁面模板
-  為什麼使用卡片式布局？
-  1. 視覺層次清楚，資訊分類明確
-  2. 響應式設計友善
-  3. 符合 Material Design 規範
+<!-- 
+檔案路徑: budget-assistant-web/src/app/features/dashboard/dashboard.component.html
+修正 TypeScript 錯誤的 Dashboard 模板
 -->
+
 <div class="dashboard-container">
-  <!-- 載入指示器 -->
-  <div class="loading-container" *ngIf="isLoading">
-    <mat-spinner diameter="50"></mat-spinner>
-    <p>載入中...</p>
+  <!-- 除錯資訊區塊 -->
+  <div class="debug-info" style="background: #f0f0f0; padding: 10px; margin-bottom: 20px; border-radius: 4px;">
+    <h4>🔧 除錯資訊</h4>
+    <p><strong>載入狀態:</strong> {{ isLoading ? '載入中...' : '載入完成' }}</p>
+    <p><strong>使用者:</strong> {{ currentUser?.username || '未載入' }}</p>
+    <p><strong>錯誤:</strong> {{ error || '無' }}</p>
+    <p><strong>預算資料:</strong> {{ budgetData ? '已載入' : '未載入' }}</p>
   </div>
 
-  <!-- 錯誤訊息 -->
-  <div class="error-container" *ngIf="error && !isLoading">
-    <mat-icon color="warn">error</mat-icon>
-    <p>{{ error }}</p>
-    <button mat-raised-button color="primary" (click)="refreshData()">
-      重新載入
-    </button>
+  <!-- 頁面標題 -->
+  <div class="page-header">
+    <h1>儀表板</h1>
+    <p *ngIf="currentUser">歡迎回來，{{ currentUser.username }}！</p>
+  </div>
+
+  <!-- 載入中狀態 -->
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>正在載入儀表板資料...</p>
+  </div>
+
+  <!-- 錯誤狀態 -->
+  <div *ngIf="error && !isLoading" class="error-container">
+    <mat-card class="error-card">
+      <mat-card-header>
+        <mat-icon color="warn">error</mat-icon>
+        <mat-card-title>載入失敗</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <p>{{ error }}</p>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-button color="primary" (click)="refreshData()">
+          <mat-icon>refresh</mat-icon>
+          重試
+        </button>
+      </mat-card-actions>
+    </mat-card>
   </div>
 
   <!-- 主要內容 -->
-  <div class="dashboard-content" *ngIf="!isLoading && !error">
-    <!-- 歡迎訊息 -->
-    <div class="welcome-section">
-      <h1>歡迎回來，{{ currentUser?.displayName || currentUser?.username }}！</h1>
-      <p class="welcome-subtitle">這是您的{{ currentMonth }}財務概覽</p>
-    </div>
-
-    <!-- 統計卡片區域 -->
+  <div *ngIf="!isLoading && !error" class="dashboard-content">
+    
+    <!-- 快速統計卡片 -->
     <div class="stats-grid">
+      
       <!-- 本月預算卡片 -->
       <mat-card class="stat-card budget-card">
         <mat-card-header>
-          <mat-card-title>
-            <mat-icon>account_balance_wallet</mat-icon>
-            本月預算
-          </mat-card-title>
+          <mat-icon mat-card-avatar color="primary">account_balance_wallet</mat-icon>
+          <mat-card-title>本月預算</mat-card-title>
+          <mat-card-subtitle>{{ currentMonth }}</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
-          <div class="stat-amount" *ngIf="budgetData">
-            {{ formatCurrency(budgetData.totalBudget) }}
+          <div class="budget-info" *ngIf="budgetData; else noBudgetData">
+            <div class="budget-amount">
+              <span class="total">總預算: ${{ budgetData.totalBudget | number }}</span>
+              <span class="remaining">剩餘: ${{ budgetData.remainingCash | number }}</span>
+            </div>
+            <div class="budget-progress">
+              <mat-progress-bar 
+                mode="determinate" 
+                [value]="budgetUtilizationPercentage"
+                [color]="budgetUtilizationPercentage > 80 ? 'warn' : 'primary'">
+              </mat-progress-bar>
+              <span class="percentage">已使用 {{ budgetUtilizationPercentage }}%</span>
+            </div>
           </div>
-          <div class="stat-description">總預算金額</div>
+          <ng-template #noBudgetData>
+            <p>尚未設定本月預算</p>
+          </ng-template>
         </mat-card-content>
       </mat-card>
 
-      <!-- 剩餘金額卡片 -->
-      <mat-card class="stat-card remaining-card">
-        <mat-card-header>
-          <mat-card-title>
-            <mat-icon>savings</mat-icon>
-            剩餘金額
-          </mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="stat-amount" *ngIf="budgetData">
-            {{ formatCurrency(budgetData.remainingCash) }}
-          </div>
-          <div class="stat-description">可用餘額</div>
-        </mat-card-content>
-      </mat-card>
-
-      <!-- 已支出金額卡片 -->
+      <!-- 本月支出卡片 -->
       <mat-card class="stat-card expense-card">
         <mat-card-header>
-          <mat-card-title>
-            <mat-icon>shopping_cart</mat-icon>
-            已支出
-          </mat-card-title>
+          <mat-icon mat-card-avatar color="accent">shopping_cart</mat-icon>
+          <mat-card-title>本月支出</mat-card-title>
+          <mat-card-subtitle>累計金額</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
-          <div class="stat-amount" *ngIf="budgetData">
-            {{ formatCurrency(budgetData.totalCashExpenses) }}
+          <div class="expense-amount">
+            <!-- 修正：使用 totalCashExpenses 而不是 totalExpenses -->
+            ${{ budgetData?.totalCashExpenses | number }}
           </div>
-          <div class="stat-description">本月支出</div>
         </mat-card-content>
       </mat-card>
 
       <!-- 剩餘天數卡片 -->
       <mat-card class="stat-card days-card">
         <mat-card-header>
-          <mat-card-title>
-            <mat-icon>calendar_today</mat-icon>
-            剩餘天數
-          </mat-card-title>
+          <mat-icon mat-card-avatar>calendar_today</mat-icon>
+          <mat-card-title>本月剩餘</mat-card-title>
+          <mat-card-subtitle>天數</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
-          <div class="stat-amount">{{ remainingDays }}</div>
-          <div class="stat-description">本月剩餘</div>
+          <div class="days-count">
+            {{ remainingDays }} 天
+          </div>
         </mat-card-content>
       </mat-card>
-    </div>
 
-    <!-- 預算使用率進度條 -->
-    <mat-card class="progress-card" *ngIf="budgetData && budgetData.totalBudget > 0">
-      <mat-card-header>
-        <mat-card-title>預算使用率</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="progress-info">
-          <span>{{ budgetUtilizationPercentage }}% 已使用</span>
-          <span>{{ formatCurrency(budgetData.remainingCash) }} 剩餘</span>
-        </div>
-        <mat-progress-bar 
-          [value]="budgetUtilizationPercentage" 
-          [color]="getBudgetStatusColor()"
-          mode="determinate">
-        </mat-progress-bar>
-      </mat-card-content>
-    </mat-card>
+      <!-- 訂閱服務卡片 -->
+      <mat-card class="stat-card subscription-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar color="accent">subscriptions</mat-icon>
+          <mat-card-title>訂閱服務</mat-card-title>
+          <mat-card-subtitle>本月費用</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="subscription-amount">
+            ${{ budgetData?.totalSubscriptions | number }}
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- 信用卡卡片 -->
+      <mat-card class="stat-card credit-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar color="warn">credit_card</mat-icon>
+          <mat-card-title>信用卡消費</mat-card-title>
+          <mat-card-subtitle>本月累計</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="credit-amount">
+            ${{ budgetData?.totalCreditCard | number }}
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- 總計消費卡片 -->
+      <mat-card class="stat-card total-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>monetization_on</mat-icon>
+          <mat-card-title>總計消費</mat-card-title>
+          <mat-card-subtitle>信用卡+訂閱</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="total-amount">
+            ${{ budgetData?.combinedCreditTotal | number }}
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+    </div>
 
     <!-- 快速操作區域 -->
     <div class="quick-actions">
       <h2>快速操作</h2>
       <div class="action-buttons">
-        <button mat-raised-button color="primary" (click)="navigateToExpense()">
+        <button mat-raised-button color="primary" (click)="navigateToExpenses()">
           <mat-icon>add</mat-icon>
           新增支出
         </button>
-        
         <button mat-raised-button color="accent" (click)="navigateToBudget()">
-          <mat-icon>settings</mat-icon>
+          <mat-icon>account_balance</mat-icon>
           設定預算
         </button>
-        
-        <button mat-stroked-button (click)="navigateToHistory()">
+        <button mat-raised-button (click)="navigateToHistory()">
           <mat-icon>history</mat-icon>
-          查看記錄
+          查看歷史
         </button>
       </div>
     </div>
 
-    <!-- 空狀態提示 -->
-    <mat-card class="empty-state" *ngIf="budgetData && budgetData.totalBudget === 0">
-      <mat-card-content>
-        <mat-icon>info</mat-icon>
-        <h3>開始使用理財管理系統</h3>
-        <p>您還沒有設定本月預算，請先設定預算來開始管理您的財務。</p>
-        <button mat-raised-button color="primary" (click)="navigateToBudget()">
-          立即設定預算
-        </button>
-      </mat-card-content>
-    </mat-card>
+    <!-- 測試按鈕 -->
+    <div class="test-buttons" style="margin-top: 20px;">
+      <h3>🧪 測試功能</h3>
+      <button mat-button color="primary" (click)="refreshData()">重新載入資料</button>
+      <button mat-button color="warn" (click)="authService.logout()">登出測試</button>
+    </div>
+    
   </div>
 </div>

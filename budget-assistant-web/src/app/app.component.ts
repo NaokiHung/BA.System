@@ -1,15 +1,16 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-
 /**
- * Angular 19 獨立根組件
- * 修正：移除對 LayoutComponent 的直接引用，改用路由
+ * 檔案路徑: budget-assistant-web/src/app/app.component.ts
+ * 修正的根組件，移除除錯資訊
  */
+
+import { Component } from '@angular/core';
+import { LayoutComponent } from './layout/layout.component';
+
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
-  template: '<router-outlet></router-outlet>',
+  imports: [LayoutComponent],
+  template: '<app-layout></app-layout>',
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
