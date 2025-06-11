@@ -7,8 +7,12 @@ using BA.Server.Core.Interfaces;
 namespace BA.Server.Business.Services
 {
     /// <summary>
-    /// 支出服務實作 - 根據現有程式碼修正版本
-    /// 檔案路徑：BA.Server/BA.Server.Business/Services/ExpenseService.cs
+    /// 支出服務實作
+    /// 為什麼要實作所有介面方法？
+    /// 1. 符合介面契約 (Interface Segregation Principle)
+    /// 2. 提供完整的 CRUD 操作
+    /// 3. 確保編譯成功並滿足依賴注入的需求
+    /// 4. 遵循分層應用程式架構的業務邏輯層責任
     /// </summary>
     public class ExpenseService : IExpenseService
     {
@@ -16,6 +20,13 @@ namespace BA.Server.Business.Services
         private readonly IBaseRepository<CashExpense> _expenseRepository;
         private readonly ILogger<ExpenseService> _logger;
 
+        /// <summary>
+        /// 建構子 - 使用依賴注入
+        /// 為什麼要注入這些依賴？
+        /// 1. Repository：資料存取層，處理所有資料庫操作
+        /// 2. Logger：記錄系統運行狀況，便於除錯和監控
+        /// 3. 遵循依賴反轉原則 (Dependency Inversion Principle)
+        /// </summary>
         public ExpenseService(
             IBaseRepository<MonthlyBudget> budgetRepository,
             IBaseRepository<CashExpense> expenseRepository,
@@ -26,8 +37,12 @@ namespace BA.Server.Business.Services
             _logger = logger;
         }
 
-        // === 現有方法（保持原樣） ===
+        #region 預算相關方法
 
+        /// <summary>
+        /// 取得當月預算資訊
+        /// 流程：查詢預算 → 計算支出 → 組合回應資料
+        /// </summary>
         public async Task<MonthlyBudgetResponse> GetCurrentMonthBudgetAsync(string userId)
         {
             try
@@ -54,8 +69,8 @@ namespace BA.Server.Business.Services
                     TotalBudget = budget?.Amount ?? 0,
                     RemainingCash = budget?.RemainingAmount ?? 0,
                     TotalCashExpenses = totalExpenses,
-                    TotalSubscriptions = 0,
-                    TotalCreditCard = 0,
+                    TotalSubscriptions = 0, // 暫時設為0，後續實作訂閱功能時再修改
+                    TotalCreditCard = 0,    // 暫時設為0，後續實作信用卡功能時再修改
                     CombinedCreditTotal = 0,
                     Year = year,
                     Month = month,
@@ -69,6 +84,81 @@ namespace BA.Server.Business.Services
             }
         }
 
+        /// <summary>
+        /// 設定月預算
+        /// 流程：檢查是否存在 → 新增或更新預算 → 記錄日誌
+        /// </summary>
+        public async Task<ExpenseResponse> SetMonthlyBudgetAsync(string userId, decimal amount, int year, int month)
+        {
+            try
+            {
+                // 步驟1：檢查該月預算是否已存在
+                var budgets = await _budgetRepository.FindAsync(
+                    b => b.UserId == userId && b.Year == year && b.Month == month);
+                var existingBudget = budgets.FirstOrDefault();
+
+                if (existingBudget != null)
+                {
+                    // 更新現有預算
+                    var currentExpenses = await _expenseRepository.FindAsync(
+                        e => e.UserId == userId && e.Year == year && e.Month == month);
+                    var totalExpenses = currentExpenses.Sum(e => e.Amount);
+
+                    existingBudget.Amount = amount;
+                    existingBudget.RemainingAmount = amount - totalExpenses;
+                    existingBudget.UpdatedDate = DateTime.Now;
+
+                    await _budgetRepository.UpdateAsync(existingBudget);
+
+                    return new ExpenseResponse
+                    {
+                        Success = true,
+                        Message = "預算更新成功",
+                        RemainingBudget = existingBudget.RemainingAmount
+                    };
+                }
+                else
+                {
+                    // 建立新預算
+                    var budget = new MonthlyBudget
+                    {
+                        UserId = userId,
+                        Year = year,
+                        Month = month,
+                        Amount = amount,
+                        RemainingAmount = amount,
+                        CreatedDate = DateTime.Now
+                    };
+
+                    await _budgetRepository.AddAsync(budget);
+                    
+                    return new ExpenseResponse
+                    {
+                        Success = true,
+                        Message = "預算設定成功",
+                        RemainingBudget = budget.RemainingAmount
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "設定月預算時發生錯誤，使用者：{UserId}", userId);
+                return new ExpenseResponse
+                {
+                    Success = false,
+                    Message = "設定預算失敗，請稍後再試"
+                };
+            }
+        }
+
+        #endregion
+
+        #region 現金支出 CRUD 操作
+
+        /// <summary>
+        /// 新增現金支出
+        /// 流程：檢查預算 → 驗證餘額 → 新增支出 → 更新預算
+        /// </summary>
         public async Task<ExpenseResponse> AddCashExpenseAsync(string userId, AddCashExpenseRequest request)
         {
             try
@@ -143,66 +233,200 @@ namespace BA.Server.Business.Services
             }
         }
 
-        public async Task<ExpenseResponse> SetMonthlyBudgetAsync(string userId, decimal amount, int year, int month)
+        /// <summary>
+        /// 取得現金支出詳細資料
+        /// 流程：驗證權限 → 查詢支出 → 轉換為回應格式
+        /// </summary>
+        public async Task<CashExpenseDetailResponse> GetCashExpenseDetailAsync(string userId, int expenseId)
         {
             try
             {
-                // 步驟1：檢查預算是否已存在
-                var existingBudgets = await _budgetRepository.FindAsync(
-                    b => b.UserId == userId && b.Year == year && b.Month == month);
-                var existingBudget = existingBudgets.FirstOrDefault();
+                // 查詢支出記錄，同時驗證是否屬於該使用者
+                var expenses = await _expenseRepository.FindAsync(
+                    e => e.Id == expenseId && e.UserId == userId);
+                var expense = expenses.FirstOrDefault();
 
-                if (existingBudget != null)
+                if (expense == null)
                 {
-                    // 更新現有預算
-                    var difference = amount - existingBudget.Amount;
-                    existingBudget.Amount = amount;
-                    existingBudget.RemainingAmount += difference;
-                    existingBudget.UpdatedDate = DateTime.UtcNow;
-                    
-                    await _budgetRepository.UpdateAsync(existingBudget);
-                    
-                    return new ExpenseResponse
-                    {
-                        Success = true,
-                        Message = "預算更新成功",
-                        RemainingBudget = existingBudget.RemainingAmount
-                    };
+                    throw new UnauthorizedAccessException("找不到指定的支出記錄或您沒有權限存取");
                 }
-                else
+
+                return new CashExpenseDetailResponse
                 {
-                    // 新增預算
-                    var budget = new MonthlyBudget
-                    {
-                        UserId = userId,
-                        Year = year,
-                        Month = month,
-                        Amount = amount,
-                        RemainingAmount = amount,
-                        CreatedDate = DateTime.UtcNow
-                    };
-                    
-                    await _budgetRepository.AddAsync(budget);
-                    
-                    return new ExpenseResponse
-                    {
-                        Success = true,
-                        Message = "預算設定成功",
-                        RemainingBudget = budget.RemainingAmount
-                    };
-                }
+                    Id = expense.Id,
+                    Amount = expense.Amount,
+                    Description = expense.Description,
+                    Category = expense.Category,
+                    CreatedDate = expense.CreatedDate,
+                    UpdatedDate = expense.UpdatedDate,
+                    Year = expense.Year,
+                    Month = expense.Month
+                };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "設定月預算時發生錯誤，使用者：{UserId}", userId);
+                _logger.LogError(ex, "取得支出詳細資料時發生錯誤，使用者：{UserId}，支出ID：{ExpenseId}", userId, expenseId);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 更新現金支出
+        /// 流程：驗證權限 → 計算差額 → 檢查預算 → 更新支出 → 調整預算
+        /// </summary>
+        public async Task<ExpenseResponse> UpdateCashExpenseAsync(string userId, int expenseId, UpdateCashExpenseRequest request)
+        {
+            try
+            {
+                // 步驟1：取得原支出記錄，同時驗證權限
+                var expenses = await _expenseRepository.FindAsync(
+                    e => e.Id == expenseId && e.UserId == userId);
+                var expense = expenses.FirstOrDefault();
+
+                if (expense == null)
+                {
+                    return new ExpenseResponse
+                    {
+                        Success = false,
+                        Message = "找不到指定的支出記錄或您沒有權限修改"
+                    };
+                }
+
+                // 步驟2：計算金額差異
+                var amountDifference = request.Amount - expense.Amount;
+
+                // 步驟3：如果金額增加，檢查預算是否足夠
+                if (amountDifference > 0)
+                {
+                    var budgets = await _budgetRepository.FindAsync(
+                        b => b.UserId == userId && b.Year == expense.Year && b.Month == expense.Month);
+                    var budget = budgets.FirstOrDefault();
+
+                    if (budget == null || budget.RemainingAmount < amountDifference)
+                    {
+                        return new ExpenseResponse
+                        {
+                            Success = false,
+                            Message = $"餘額不足，無法增加 {amountDifference:C}"
+                        };
+                    }
+
+                    // 更新預算餘額
+                    budget.RemainingAmount -= amountDifference;
+                    budget.UpdatedDate = DateTime.Now;
+                    await _budgetRepository.UpdateAsync(budget);
+                }
+                else if (amountDifference < 0)
+                {
+                    // 金額減少，需要增加預算餘額
+                    var budgets = await _budgetRepository.FindAsync(
+                        b => b.UserId == userId && b.Year == expense.Year && b.Month == expense.Month);
+                    var budget = budgets.FirstOrDefault();
+
+                    if (budget != null)
+                    {
+                        budget.RemainingAmount -= amountDifference; // amountDifference 是負數，所以用減法
+                        budget.UpdatedDate = DateTime.Now;
+                        await _budgetRepository.UpdateAsync(budget);
+                    }
+                }
+
+                // 步驟4：更新支出記錄
+                expense.Amount = request.Amount;
+                expense.Description = request.Description;
+                expense.Category = request.Category;
+                expense.UpdatedDate = DateTime.Now;
+
+                await _expenseRepository.UpdateAsync(expense);
+
+                _logger.LogInformation(
+                    "使用者 {UserId} 更新支出 {ExpenseId}，金額差異：{AmountDifference}",
+                    userId, expenseId, amountDifference);
+
+                return new ExpenseResponse
+                {
+                    Success = true,
+                    Message = "支出記錄更新成功",
+                    ExpenseId = expense.Id
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "更新現金支出時發生錯誤，使用者：{UserId}，支出ID：{ExpenseId}", userId, expenseId);
                 return new ExpenseResponse
                 {
                     Success = false,
-                    Message = "設定預算失敗，請稍後再試"
+                    Message = "更新支出失敗，請稍後再試"
                 };
             }
         }
 
+        /// <summary>
+        /// 刪除現金支出
+        /// 流程：驗證權限 → 刪除支出 → 回復預算餘額
+        /// </summary>
+        public async Task<ExpenseResponse> DeleteCashExpenseAsync(string userId, int expenseId)
+        {
+            try
+            {
+                // 步驟1：取得支出記錄，同時驗證權限
+                var expenses = await _expenseRepository.FindAsync(
+                    e => e.Id == expenseId && e.UserId == userId);
+                var expense = expenses.FirstOrDefault();
+
+                if (expense == null)
+                {
+                    return new ExpenseResponse
+                    {
+                        Success = false,
+                        Message = "找不到指定的支出記錄或您沒有權限刪除"
+                    };
+                }
+
+                // 步驟2：刪除支出記錄
+                await _expenseRepository.DeleteAsync(expense);
+
+                // 步驟3：回復預算餘額
+                var budgets = await _budgetRepository.FindAsync(
+                    b => b.UserId == userId && b.Year == expense.Year && b.Month == expense.Month);
+                var budget = budgets.FirstOrDefault();
+
+                if (budget != null)
+                {
+                    budget.RemainingAmount += expense.Amount;
+                    budget.UpdatedDate = DateTime.Now;
+                    await _budgetRepository.UpdateAsync(budget);
+                }
+
+                _logger.LogInformation(
+                    "使用者 {UserId} 刪除支出 {ExpenseId}，回復金額：{Amount}",
+                    userId, expenseId, expense.Amount);
+
+                return new ExpenseResponse
+                {
+                    Success = true,
+                    Message = "支出記錄刪除成功，預算已回復"
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "刪除現金支出時發生錯誤，使用者：{UserId}，支出ID：{ExpenseId}", userId, expenseId);
+                return new ExpenseResponse
+                {
+                    Success = false,
+                    Message = "刪除支出失敗，請稍後再試"
+                };
+            }
+        }
+
+        #endregion
+
+        #region 歷史記錄查詢
+
+        /// <summary>
+        /// 取得支出歷史記錄
+        /// 流程：查詢資料 → 排序 → 轉換格式
+        /// </summary>
         public async Task<IEnumerable<object>> GetExpenseHistoryAsync(string userId, int year, int month)
         {
             try
@@ -218,8 +442,7 @@ namespace BA.Server.Business.Services
                                   Description = e.Description,
                                   Category = e.Category,
                                   Date = e.CreatedDate.ToString("yyyy-MM-dd HH:mm"),
-                                  CanEdit = CanEditExpense(e.CreatedDate),
-                                  CanDelete = CanDeleteExpense(e.CreatedDate)
+                                  UpdatedDate = e.UpdatedDate?.ToString("yyyy-MM-dd HH:mm")
                               });
             }
             catch (Exception ex)
@@ -229,207 +452,6 @@ namespace BA.Server.Business.Services
             }
         }
 
-        // === 新增方法 ===
-
-        public async Task<ExpenseResponse> UpdateCashExpenseAsync(string userId, int expenseId, UpdateCashExpenseRequest request)
-        {
-            try
-            {
-                // 找到支出記錄
-                var expenses = await _expenseRepository.FindAsync(
-                    e => e.Id == expenseId && e.UserId == userId);
-                var expense = expenses.FirstOrDefault();
-
-                if (expense == null)
-                {
-                    return new ExpenseResponse
-                    {
-                        Success = false,
-                        Message = "找不到指定的支出記錄"
-                    };
-                }
-
-                // 檢查是否可編輯
-                if (!CanEditExpense(expense.CreatedDate))
-                {
-                    return new ExpenseResponse
-                    {
-                        Success = false,
-                        Message = "該支出記錄已超過可編輯期限"
-                    };
-                }
-
-                // 計算金額差異，需要更新預算
-                var amountDifference = request.Amount - expense.Amount;
-
-                // 如果金額有變化，需要檢查並更新預算
-                if (amountDifference != 0)
-                {
-                    var budgets = await _budgetRepository.FindAsync(
-                        b => b.UserId == userId && b.Year == expense.Year && b.Month == expense.Month);
-                    var budget = budgets.FirstOrDefault();
-
-                    if (budget != null)
-                    {
-                        // 檢查餘額是否足夠（如果是增加支出）
-                        if (amountDifference > 0 && budget.RemainingAmount < amountDifference)
-                        {
-                            return new ExpenseResponse
-                            {
-                                Success = false,
-                                Message = $"餘額不足，目前剩餘 {budget.RemainingAmount:C}"
-                            };
-                        }
-
-                        // 更新預算餘額
-                        budget.RemainingAmount -= amountDifference;
-                        budget.UpdatedDate = DateTime.Now;
-                        await _budgetRepository.UpdateAsync(budget);
-                    }
-                }
-
-                // 更新支出記錄
-                expense.Amount = request.Amount;
-                expense.Description = request.Description;
-                expense.Category = request.Category ?? "其他";
-
-                await _expenseRepository.UpdateAsync(expense);
-
-                _logger.LogInformation(
-                    "使用者 {UserId} 更新支出 {ExpenseId}，金額變化：{AmountDifference}",
-                    userId, expenseId, amountDifference);
-
-                return new ExpenseResponse
-                {
-                    Success = true,
-                    Message = "支出記錄更新成功",
-                    ExpenseId = expense.Id,
-                    RemainingBudget = 0 // 前端會重新載入預算資訊
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "更新支出記錄時發生錯誤，使用者：{UserId}，支出ID：{ExpenseId}", userId, expenseId);
-                return new ExpenseResponse
-                {
-                    Success = false,
-                    Message = "更新支出記錄失敗，請稍後再試"
-                };
-            }
-        }
-
-        public async Task<ExpenseResponse> DeleteCashExpenseAsync(string userId, int expenseId)
-        {
-            try
-            {
-                // 找到支出記錄
-                var expenses = await _expenseRepository.FindAsync(
-                    e => e.Id == expenseId && e.UserId == userId);
-                var expense = expenses.FirstOrDefault();
-
-                if (expense == null)
-                {
-                    return new ExpenseResponse
-                    {
-                        Success = false,
-                        Message = "找不到指定的支出記錄"
-                    };
-                }
-
-                // 檢查是否可刪除
-                if (!CanDeleteExpense(expense.CreatedDate))
-                {
-                    return new ExpenseResponse
-                    {
-                        Success = false,
-                        Message = "該支出記錄已超過可刪除期限"
-                    };
-                }
-
-                // 刪除支出記錄前，需要退還金額到預算
-                var budgets = await _budgetRepository.FindAsync(
-                    b => b.UserId == userId && b.Year == expense.Year && b.Month == expense.Month);
-                var budget = budgets.FirstOrDefault();
-
-                if (budget != null)
-                {
-                    budget.RemainingAmount += expense.Amount;
-                    budget.UpdatedDate = DateTime.Now;
-                    await _budgetRepository.UpdateAsync(budget);
-                }
-
-                // 刪除支出記錄 - 使用 ID
-                await _expenseRepository.DeleteAsync(expense.Id);
-
-                _logger.LogInformation(
-                    "使用者 {UserId} 刪除支出 {ExpenseId}，退還金額：{Amount}",
-                    userId, expense.Id, expense.Amount);
-
-                return new ExpenseResponse
-                {
-                    Success = true,
-                    Message = "支出記錄已刪除，金額已退還至預算",
-                    RemainingBudget = budget?.RemainingAmount ?? 0
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "刪除支出記錄時發生錯誤，使用者：{UserId}，支出ID：{ExpenseId}", userId, expenseId);
-                return new ExpenseResponse
-                {
-                    Success = false,
-                    Message = "刪除支出記錄失敗，請稍後再試"
-                };
-            }
-        }
-
-        public async Task<CashExpenseDetailResponse?> GetCashExpenseDetailAsync(string userId, int expenseId)
-        {
-            try
-            {
-                var expenses = await _expenseRepository.FindAsync(
-                    e => e.Id == expenseId && e.UserId == userId);
-                var expense = expenses.FirstOrDefault();
-
-                if (expense == null)
-                {
-                    return null;
-                }
-
-                return new CashExpenseDetailResponse
-                {
-                    Id = expense.Id,
-                    Amount = expense.Amount,
-                    Description = expense.Description,
-                    Category = expense.Category ?? "其他",
-                    CreatedDate = expense.CreatedDate,
-                    Year = expense.Year,
-                    Month = expense.Month,
-                    UserId = expense.UserId,
-                    CanEdit = CanEditExpense(expense.CreatedDate),
-                    CanDelete = CanDeleteExpense(expense.CreatedDate)
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "取得支出記錄詳情時發生錯誤，使用者：{UserId}，支出ID：{ExpenseId}", userId, expenseId);
-                return null;
-            }
-        }
-
-        // === 私有輔助方法 ===
-
-        private bool CanEditExpense(DateTime expenseDate)
-        {
-            // 只允許編輯一個月內的記錄
-            return DateTime.Now.Subtract(expenseDate).TotalDays <= 30;
-        }
-
-        private bool CanDeleteExpense(DateTime expenseDate)
-        {
-            // 只允許刪除當月的記錄
-            var now = DateTime.Now;
-            return expenseDate.Year == now.Year && expenseDate.Month == now.Month;
-        }
+        #endregion
     }
 }
