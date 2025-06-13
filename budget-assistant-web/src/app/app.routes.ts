@@ -35,6 +35,13 @@ export const routes: Routes = [
     loadChildren: () => import('./features/expense/expense.routes').then(r => r.expenseRoutes)
   },
   
+  // 用戶管理
+  {
+    path: 'user',
+    canActivate: [authGuard],
+    loadChildren: () => import('./features/user/user.routes').then(r => r.USER_ROUTES)
+  },
+  
   // 404 頁面
   { 
     path: '**', 

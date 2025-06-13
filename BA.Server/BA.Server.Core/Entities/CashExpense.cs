@@ -25,7 +25,7 @@ namespace BA.Server.Core.Entities  // 保持原有的命名空間！
         public required string Description { get; set; }
         
         [MaxLength(50)]
-        public required string Category { get; set; }
+        public string? Category { get; set; }
         
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         

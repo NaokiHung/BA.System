@@ -122,7 +122,8 @@ export class ExpenseHistoryComponent implements OnInit, OnDestroy {
     this.editForm = this.fb.group({
       amount: ['', [Validators.required, Validators.min(0.01), Validators.max(999999.99)]],
       description: ['', [Validators.required, Validators.maxLength(200)]],
-      category: ['', [Validators.maxLength(50)]]
+      category: ['', [Validators.maxLength(50)]],
+      expenseType: ['', [Validators.required]]
     });
   }
 
@@ -152,12 +153,15 @@ export class ExpenseHistoryComponent implements OnInit, OnDestroy {
     this.error = null;
     this.cancelEdit(); // 取消任何正在進行的編輯
 
+    console.log(`載入 ${year}年${month}月 的支出記錄...`);
+
     this.expenseService.getExpenseHistory(year, month)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
           this.expenseHistory = this.transformToTableItems(data);
           this.isLoading = false;
+          console.log('支出記錄載入完成:', this.expenseHistory);
         },
         error: (error) => {
           console.error('載入支出記錄失敗:', error);
@@ -193,33 +197,47 @@ export class ExpenseHistoryComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // 取消其他正在編輯的項目
+    // 取消所有正在編輯的項目
     this.cancelEdit();
 
     // 設定編輯狀態
     this.editingExpenseId = expense.id;
     expense.isEditing = true;
 
-    // 載入資料到編輯表單
+    // 載入資料到編輯表單，轉換支出類型為數字
+    let numericExpenseType: number;
+    if (typeof expense.expenseType === 'string') {
+      if (expense.expenseType === 'Cash') {
+        numericExpenseType = 1;
+      } else if (expense.expenseType === 'CreditCard') {
+        numericExpenseType = 2;
+      } else {
+        numericExpenseType = Number(expense.expenseType) || 1; // 默認為現金
+      }
+    } else {
+      numericExpenseType = Number(expense.expenseType) || 1;
+    }
+
     this.editForm.patchValue({
       amount: expense.amount,
       description: expense.description,
-      category: expense.category
+      category: expense.category,
+      expenseType: numericExpenseType
     });
+
   }
 
   /**
    * 取消編輯
    */
   cancelEdit(): void {
-    if (this.editingExpenseId !== null) {
-      const editingItem = this.expenseHistory.find(item => item.id === this.editingExpenseId);
-      if (editingItem) {
-        editingItem.isEditing = false;
-      }
-      this.editingExpenseId = null;
-      this.editForm.reset();
-    }
+    // 重置所有項目的編輯狀態，確保沒有遺漏
+    this.expenseHistory.forEach(item => {
+      item.isEditing = false;
+    });
+    
+    this.editingExpenseId = null;
+    this.editForm.reset();
   }
 
   /**
@@ -233,8 +251,10 @@ export class ExpenseHistoryComponent implements OnInit, OnDestroy {
         amount: this.editForm.value.amount,
         description: this.editForm.value.description.trim(),
         category: this.editForm.value.category || '其他',
-        expenseType: expense.expenseType
+        expenseType: this.editForm.value.expenseType
       };
+
+      console.log('更新支出記錄:', request);
 
       this.expenseService.updateExpense(expense.id, request)
         .pipe(takeUntil(this.destroy$))
@@ -275,6 +295,8 @@ export class ExpenseHistoryComponent implements OnInit, OnDestroy {
     const confirmed = confirm(`確定要刪除這筆支出記錄嗎？\n\n描述：${expense.description}\n金額：${expense.formattedAmount}`);
     
     if (confirmed) {
+      console.log('刪除支出記錄:', expense.id);
+
       this.expenseService.deleteExpense(expense.id)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
@@ -317,10 +339,28 @@ export class ExpenseHistoryComponent implements OnInit, OnDestroy {
    * 取得支出類型顯示名稱
    */
   getExpenseTypeDisplayName(type: ExpenseType): string {
-    switch (type) {
+    // 處理多種可能的格式：數字、字符串、枚舉
+    let numericType: number;
+    
+    if (typeof type === 'string') {
+      // 如果是字符串，嘗試轉換
+      if (type === 'Cash' || type === '1') {
+        numericType = 1;
+      } else if (type === 'CreditCard' || type === '2') {
+        numericType = 2;
+      } else {
+        numericType = Number(type);
+      }
+    } else {
+      numericType = Number(type);
+    }
+    
+    switch (numericType) {
       case ExpenseType.Cash:
+      case 1:
         return '現金';
       case ExpenseType.CreditCard:
+      case 2:
         return '信用卡';
       default:
         return '未知';
@@ -331,10 +371,27 @@ export class ExpenseHistoryComponent implements OnInit, OnDestroy {
    * 取得支出類型顯示顏色
    */
   getExpenseTypeColor(type: ExpenseType): string {
-    switch (type) {
+    // 使用相同的轉換邏輯
+    let numericType: number;
+    
+    if (typeof type === 'string') {
+      if (type === 'Cash' || type === '1') {
+        numericType = 1;
+      } else if (type === 'CreditCard' || type === '2') {
+        numericType = 2;
+      } else {
+        numericType = Number(type);
+      }
+    } else {
+      numericType = Number(type);
+    }
+    
+    switch (numericType) {
       case ExpenseType.Cash:
+      case 1:
         return 'primary';
       case ExpenseType.CreditCard:
+      case 2:
         return 'accent';
       default:
         return '';

@@ -67,6 +67,26 @@
         </mat-error>
       </mat-form-field>
 
+      <!-- 支出類型選擇 -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>支出類型</mat-label>
+        <mat-select formControlName="expenseType">
+          <mat-option [value]="1">
+            <mat-icon>payments</mat-icon>
+            現金支出
+          </mat-option>
+          <mat-option [value]="2">
+            <mat-icon>credit_card</mat-icon>
+            信用卡支出
+          </mat-option>
+        </mat-select>
+        <mat-icon matSuffix>payment</mat-icon>
+        <mat-hint>選擇支付方式</mat-hint>
+        <mat-error *ngIf="expenseForm.get('expenseType')?.invalid && expenseForm.get('expenseType')?.touched">
+          {{ getErrorMessage('expenseType') }}
+        </mat-error>
+      </mat-form-field>
+
       <!-- 操作按鈕 -->
       <div class="form-actions">
         <button 

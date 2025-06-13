@@ -109,16 +109,22 @@ export class UserProfileComponent implements OnInit, OnDestroy {
    */
   private loadUserProfile(): void {
     if (this.currentUser) {
+      // 先使用當前認證用戶資料進行初始化
+      console.log('使用當前認證用戶資料:', this.currentUser);
+      this.updateProfileForm();
+      
+      // 嘗試載入完整的用戶資料
       this.userService.getUserProfile()
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (profile: User) => {
+            console.log('成功載入完整用戶資料:', profile);
             this.currentUser = profile;
             this.updateProfileForm();
           },
           error: (error: any) => {
-            console.error('載入使用者資料失敗:', error);
-            this.showError('載入使用者資料失敗，請重新整理頁面');
+            console.warn('無法載入完整用戶資料，繼續使用認證資料:', error);
+            // 如果API失敗，繼續使用認證中的用戶資料，不顯示錯誤
           }
         });
     }
@@ -166,10 +172,13 @@ export class UserProfileComponent implements OnInit, OnDestroy {
    */
   private updateProfileForm(): void {
     if (this.currentUser) {
+      console.log('更新個人資料表單:', this.currentUser);
       this.profileForm.patchValue({
-        displayName: this.currentUser.displayName,
+        displayName: this.currentUser.displayName || '',
         email: this.currentUser.email || ''
       });
+      // 標記表單為 pristine，避免顯示驗證錯誤
+      this.profileForm.markAsPristine();
     }
   }
 

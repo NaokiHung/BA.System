@@ -5,8 +5,8 @@
 
 // === 支出類型枚舉 ===
 export enum ExpenseType {
-  Cash = 'Cash',           // 現金支出
-  CreditCard = 'CreditCard' // 信用卡支出
+  Cash = 1,           // 現金支出
+  CreditCard = 2      // 信用卡支出
 }
 
 // === 請求模型 ===
@@ -117,7 +117,7 @@ export interface User {
 }
 
 /**
- * 使用者資料更新請求
+ * 使用者個人資料更新請求
  * 為什麼要分開處理個人資料和密碼？
  * 1. 安全考量：密碼變更需要額外驗證
  * 2. 使用頻率不同：個人資料可能經常調整，密碼較少變更
@@ -125,11 +125,11 @@ export interface User {
  */
 export interface UpdateUserProfileRequest {
   displayName: string;
-  email: string;
+  email?: string;
 }
 
 /**
- * 密碼變更請求
+ * 變更密碼請求
  * 為什麼需要舊密碼？
  * 安全考量，確認是本人操作
  */

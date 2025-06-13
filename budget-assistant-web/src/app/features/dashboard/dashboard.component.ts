@@ -102,7 +102,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
-          console.log('API 回傳的數據:', data); // 除錯用，查看實際回傳的數據
+          console.log('=== API 回傳的完整數據 ===');
+          console.log('原始資料:', data);
+          console.log('資料類型檢查:');
+          console.log('- totalBudget:', data.totalBudget, typeof data.totalBudget);
+          console.log('- remainingCash:', data.remainingCash, typeof data.remainingCash);
+          console.log('- totalCashExpenses:', data.totalCashExpenses, typeof data.totalCashExpenses);
+          console.log('- totalCreditCard:', data.totalCreditCard, typeof data.totalCreditCard);
           
           // 驗證數據完整性
           if (this.validateBudgetData(data)) {
@@ -183,14 +189,26 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private calculateBudgetStatistics(): void {
     if (!this.budgetData) return;
 
-    // 計算總支出金額（使用後端提供的數據）
-    this.totalSpent = this.budgetData.totalCashExpenses;
+    console.log('原始預算數據:', this.budgetData);
 
-    // 計算預算使用率
-    if (this.budgetData.totalBudget > 0) {
-      this.budgetUtilizationPercentage = Math.round((this.totalSpent / this.budgetData.totalBudget) * 100);
-      // 確保百分比在合理範圍內
-      this.budgetUtilizationPercentage = Math.min(this.budgetUtilizationPercentage, 100);
+    // 計算總支出金額 - 修正：使用 totalBudget - remainingCash
+    const totalBudget = Number(this.budgetData.totalBudget) || 0;
+    const remainingCash = Number(this.budgetData.remainingCash) || 0;
+    this.totalSpent = totalBudget - remainingCash;
+
+    // 計算預算使用率 - 修正計算邏輯
+    if (totalBudget > 0) {
+      console.log('計算詳情:', {
+        totalBudget: totalBudget,
+        remainingCash: remainingCash,
+        spent: this.totalSpent,
+        calculation: (this.totalSpent / totalBudget) * 100
+      });
+      
+      this.budgetUtilizationPercentage = Math.round((this.totalSpent / totalBudget) * 100);
+      
+      // 確保百分比不會超過合理範圍，但允許超過100%來顯示超支情況
+      this.budgetUtilizationPercentage = Math.max(0, this.budgetUtilizationPercentage);
     } else {
       this.budgetUtilizationPercentage = 0;
     }
@@ -198,10 +216,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // 設定當月資訊
     this.currentMonth = this.budgetData.monthName || `${this.budgetData.year}年${this.budgetData.month.toString().padStart(2, '0')}月`;
 
-    console.log('計算結果:', {
+    console.log('最終計算結果:', {
+      totalBudget: totalBudget,
+      remainingCash: remainingCash,
       totalSpent: this.totalSpent,
       utilization: this.budgetUtilizationPercentage,
-      month: this.currentMonth
+      month: this.currentMonth,
+      isOverBudget: this.budgetUtilizationPercentage > 100
     });
   }
 
@@ -303,5 +324,31 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.budgetUtilizationPercentage <= 80) return '預算適中';
     if (this.budgetUtilizationPercentage <= 100) return '預算緊張';
     return '已超支';
+  }
+
+  /**
+   * 取得問候語
+   * 根據時間返回不同的問候語
+   */
+  getGreeting(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return '早安';
+    if (hour < 18) return '午安';
+    return '晚安';
+  }
+
+  /**
+   * 取得當前日期
+   * 格式化顯示今天的日期
+   */
+  getCurrentDate(): string {
+    const today = new Date();
+    const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'long'
+    };
+    return today.toLocaleDateString('zh-TW', options);
   }
 }

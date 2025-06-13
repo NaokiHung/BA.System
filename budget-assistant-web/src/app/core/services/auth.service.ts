@@ -206,6 +206,15 @@ export class AuthService {
   }
 
   /**
+   * 更新當前使用者資訊
+   * 用於個人資料更新後同步全域狀態
+   */
+  updateCurrentUser(user: User): void {
+    this.currentUserSubject.next(user);
+    console.log('✅ 使用者資訊已更新:', user);
+  }
+
+  /**
    * 清除認證狀態
    */
   private clearAuthenticationState(): void {

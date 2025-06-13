@@ -1,74 +1,107 @@
-<!--
-  登入頁面模板 - 修正 mat-card-actions align 屬性
--->
+<!-- 清新現代化登入頁面 -->
 <div class="login-container">
-  <mat-card class="login-card">
-    <mat-card-header>
-      <mat-card-title>登入系統</mat-card-title>
-      <mat-card-subtitle>請輸入您的帳號密碼</mat-card-subtitle>
-    </mat-card-header>
+  <!-- 背景裝飾元素 -->
+  <div class="background-decoration">
+    <div class="floating-shape shape-1"></div>
+    <div class="floating-shape shape-2"></div>
+    <div class="floating-shape shape-3"></div>
+  </div>
 
-    <mat-card-content>
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+  <!-- 登入卡片 -->
+  <div class="login-card">
+    <!-- 標題區域 -->
+    <div class="login-header">
+      <div class="app-logo">
+        <div class="logo-icon">🌱</div>
+        <h1>預算助手</h1>
+      </div>
+      <p class="welcome-text">歡迎回來！請登入您的帳戶</p>
+    </div>
+
+    <!-- 表單區域 -->
+    <div class="login-form">
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-5">
         <!-- 帳號輸入欄位 -->
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>帳號</mat-label>
-          <input 
-            matInput 
-            formControlName="username"
-            placeholder="請輸入帳號"
-            autocomplete="username">
-          <mat-icon matSuffix>person</mat-icon>
-          <mat-error *ngIf="loginForm.get('username')?.invalid && loginForm.get('username')?.touched">
-            {{ getErrorMessage('username') }}
-          </mat-error>
-        </mat-form-field>
+        <div class="form-group">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>帳號</mat-label>
+            <input 
+              matInput 
+              formControlName="username"
+              placeholder="請輸入您的帳號"
+              autocomplete="username"
+              class="rounded-xl">
+            <mat-icon matSuffix class="text-fresh-500">person_outline</mat-icon>
+            <mat-error *ngIf="loginForm.get('username')?.invalid && loginForm.get('username')?.touched">
+              {{ getErrorMessage('username') }}
+            </mat-error>
+          </mat-form-field>
+        </div>
 
         <!-- 密碼輸入欄位 -->
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>密碼</mat-label>
-          <input 
-            matInput 
-            [type]="hidePassword ? 'password' : 'text'"
-            formControlName="password"
-            placeholder="請輸入密碼"
-            autocomplete="current-password">
-          <button 
-            mat-icon-button 
-            matSuffix 
-            type="button"
-            (click)="hidePassword = !hidePassword"
-            [attr.aria-label]="'隱藏密碼'"
-            [attr.aria-pressed]="hidePassword">
-            <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
-          </button>
-          <mat-error *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
-            {{ getErrorMessage('password') }}
-          </mat-error>
-        </mat-form-field>
+        <div class="form-group">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>密碼</mat-label>
+            <input 
+              matInput 
+              [type]="hidePassword ? 'password' : 'text'"
+              formControlName="password"
+              placeholder="請輸入您的密碼"
+              autocomplete="current-password"
+              class="rounded-xl">
+            <button 
+              mat-icon-button 
+              matSuffix 
+              type="button"
+              (click)="hidePassword = !hidePassword"
+              [attr.aria-label]="'切換密碼顯示'"
+              [attr.aria-pressed]="hidePassword"
+              class="text-fresh-500">
+              <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            <mat-error *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+              {{ getErrorMessage('password') }}
+            </mat-error>
+          </mat-form-field>
+        </div>
 
         <!-- 登入按鈕 -->
-        <button 
-          mat-raised-button 
-          color="primary" 
-          type="submit"
-          class="full-width login-button"
-          [disabled]="isLoading">
-          <mat-spinner diameter="20" *ngIf="isLoading"></mat-spinner>
-          <span *ngIf="!isLoading">登入</span>
-          <span *ngIf="isLoading">登入中...</span>
-        </button>
+        <div class="form-group">
+          <button 
+            mat-raised-button 
+            color="primary" 
+            type="submit"
+            class="login-button w-full"
+            [disabled]="isLoading || loginForm.invalid">
+            <div class="button-content">
+              <mat-spinner diameter="20" *ngIf="isLoading" class="mr-2"></mat-spinner>
+              <mat-icon *ngIf="!isLoading" class="mr-2">login</mat-icon>
+              <span>{{ isLoading ? '登入中...' : '登入' }}</span>
+            </div>
+          </button>
+        </div>
       </form>
-    </mat-card-content>
+    </div>
 
-    <!-- 修正：移除 align="center" 屬性 -->
-    <mat-card-actions>
-      <div class="register-link">
+    <!-- 註冊連結 -->
+    <div class="register-section">
+      <p class="register-text">
         還沒有帳號？
-        <button mat-button color="primary" (click)="goToRegister()">
+        <button 
+          mat-button 
+          color="accent" 
+          (click)="goToRegister()"
+          class="register-link-button">
           立即註冊
         </button>
-      </div>
-    </mat-card-actions>
-  </mat-card>
+      </p>
+    </div>
+
+    <!-- 裝飾性小圖標 -->
+    <div class="decoration-icons">
+      <span class="icon">💰</span>
+      <span class="icon">📊</span>
+      <span class="icon">💳</span>
+    </div>
+  </div>
 </div>

@@ -11,6 +11,7 @@ namespace BA.Server.Data.Contexts
         
         public DbSet<MonthlyBudget> MonthlyBudgets { get; set; }
         public DbSet<CashExpense> CashExpenses { get; set; }
+        public DbSet<CreditCardExpense> CreditCardExpenses { get; set; }
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -22,6 +23,10 @@ namespace BA.Server.Data.Contexts
             
             // CashExpense 索引
             modelBuilder.Entity<CashExpense>()
+                .HasIndex(e => new { e.UserId, e.Year, e.Month });
+
+            // CreditCardExpense 索引
+            modelBuilder.Entity<CreditCardExpense>()
                 .HasIndex(e => new { e.UserId, e.Year, e.Month });
         }
     }

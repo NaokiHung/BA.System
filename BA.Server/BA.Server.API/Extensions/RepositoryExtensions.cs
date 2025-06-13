@@ -27,6 +27,9 @@ namespace BA.Server.API.Extensions
                 return new BaseRepository<User>(context, logger);
             });
 
+            // 添加 IUserRepository 的註冊
+            services.AddScoped<IUserRepository, UserRepository>();
+
             // 支出管理相關的 Repository（使用 ExpenseDbContext）
             services.AddScoped<IBaseRepository<MonthlyBudget>>(provider =>
             {
@@ -42,13 +45,13 @@ namespace BA.Server.API.Extensions
                 return new BaseRepository<CashExpense>(context, logger);
             });
 
-            // 未來如果新增 CreditCardExpense 實體，可以在此處新增：
-            // services.AddScoped<IBaseRepository<CreditCardExpense>>(provider =>
-            // {
-            //     var context = provider.GetRequiredService<ExpenseDbContext>();
-            //     var logger = provider.GetRequiredService<ILogger<BaseRepository<CreditCardExpense>>>();
-            //     return new BaseRepository<CreditCardExpense>(context, logger);
-            // });
+            // 信用卡支出 Repository
+            services.AddScoped<IBaseRepository<CreditCardExpense>>(provider =>
+            {
+                var context = provider.GetRequiredService<ExpenseDbContext>();
+                var logger = provider.GetRequiredService<ILogger<BaseRepository<CreditCardExpense>>>();
+                return new BaseRepository<CreditCardExpense>(context, logger);
+            });
 
             return services;
         }

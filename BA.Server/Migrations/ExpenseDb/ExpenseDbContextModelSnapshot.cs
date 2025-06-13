@@ -56,6 +56,93 @@ namespace BA.Server.Migrations.ExpenseDb
                     b.ToTable("CashExpenses");
                 });
 
+            modelBuilder.Entity("BA.Server.Core.Entities.CreditCardExpense", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("AuthorizationCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("BilledDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CardLastFourDigits")
+                        .HasMaxLength(4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CardName")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Category")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("ExchangeRate")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Installments")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsBilled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsOnlineTransaction")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsRecurring")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("MerchantName")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Month")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("OriginalAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("OriginalCurrency")
+                        .HasMaxLength(3)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Year", "Month");
+
+                    b.ToTable("CreditCardExpenses");
+                });
+
             modelBuilder.Entity("BA.Server.Core.Entities.MonthlyBudget", b =>
                 {
                     b.Property<string>("UserId")

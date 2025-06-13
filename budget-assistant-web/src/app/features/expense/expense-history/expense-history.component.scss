@@ -1,32 +1,44 @@
 /**
- * 支出記錄頁面樣式
+ * 支出記錄頁面樣式 - 簡化版本確保功能正常
  */
 
 .expense-history-container {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 24px;
 }
 
 .page-header {
   text-align: center;
   margin-bottom: 32px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
 
   h1 {
-    font-size: 28px;
-    font-weight: 500;
-    color: #333;
+    font-size: 2rem;
+    font-weight: 600;
+    color: white;
     margin-bottom: 8px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 
   p {
-    font-size: 16px;
-    color: #666;
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 300;
+    margin: 0;
   }
 }
 
-.search-card {
+.search-card, .history-card {
   margin-bottom: 24px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 
   mat-card-header {
     mat-card-title {
@@ -38,28 +50,29 @@
       }
     }
   }
+}
 
-  .search-fields {
-    display: flex;
-    gap: 16px;
-    align-items: flex-end;
-    flex-wrap: wrap;
+.search-fields {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  flex-wrap: wrap;
 
-    mat-form-field {
-      min-width: 120px;
+  mat-form-field {
+    flex: 1;
+    min-width: 160px;
+  }
+
+  button {
+    height: 48px;
+    min-width: 120px;
+
+    mat-spinner {
+      margin-right: 8px;
     }
 
-    button {
-      height: 48px;
-      min-width: 120px;
-
-      mat-spinner {
-        margin-right: 8px;
-      }
-
-      mat-icon {
-        margin-right: 8px;
-      }
+    mat-icon {
+      margin-right: 8px;
     }
   }
 }
@@ -123,42 +136,136 @@
     tr:hover {
       background-color: #f5f5f5;
     }
+
+    // 內聯編輯樣式
+    .inline-edit-field {
+      width: 100%;
+      max-width: 200px;
+      
+      ::ng-deep {
+        .mat-mdc-form-field-wrapper {
+          padding-bottom: 0 !important;
+        }
+        
+        .mat-mdc-form-field-flex {
+          min-height: 40px !important;
+          align-items: center;
+        }
+        
+        .mat-mdc-form-field-infix {
+          min-height: 32px !important;
+          padding: 8px 0 !important;
+          border-top: none !important;
+        }
+        
+        .mat-mdc-input-element {
+          padding: 4px 0 !important;
+          font-size: 14px;
+          line-height: 1.4;
+        }
+        
+        .mat-mdc-form-field-subscript-wrapper {
+          display: none !important;
+        }
+        
+        .mat-mdc-text-field-wrapper {
+          &.mdc-text-field--outlined {
+            .mdc-notched-outline {
+              .mdc-notched-outline__leading,
+              .mdc-notched-outline__notch,
+              .mdc-notched-outline__trailing {
+                border-width: 1px !important;
+              }
+            }
+            
+            &.mdc-text-field--focused .mdc-notched-outline {
+              .mdc-notched-outline__leading,
+              .mdc-notched-outline__notch,
+              .mdc-notched-outline__trailing {
+                border-width: 2px !important;
+                border-color: #667eea !important;
+              }
+            }
+          }
+        }
+        
+        .mat-mdc-select {
+          .mat-mdc-select-value {
+            font-size: 14px;
+            line-height: 1.4;
+          }
+          
+          .mat-mdc-select-trigger {
+            min-height: 32px;
+            display: flex;
+            align-items: center;
+          }
+        }
+        
+        // 移除浮動標籤
+        .mat-mdc-form-field-label-wrapper {
+          display: none !important;
+        }
+        
+        // 確保 placeholder 可見
+        .mat-mdc-input-element::placeholder {
+          color: rgba(0, 0, 0, 0.6);
+          opacity: 1;
+        }
+        
+        // Select 選項樣式
+        .mat-mdc-select-placeholder {
+          color: rgba(0, 0, 0, 0.6);
+        }
+      }
+    }
+
+    .action-header {
+      width: 120px;
+      text-align: center;
+    }
+
+    .action-cell {
+      text-align: center;
+      white-space: nowrap;
+    }
   }
 
   .total-section {
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid #e0e0e0;
-    text-align: right;
+    margin-top: 20px;
+    padding: 16px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border-top: 3px solid #667eea;
 
     .total-amount {
-      font-size: 18px;
-      color: #333;
+      text-align: right;
+      font-size: 1.2rem;
+      color: #2d3748;
     }
   }
 
   .no-data {
     text-align: center;
     padding: 60px 20px;
+    color: #666;
 
     mat-icon {
       font-size: 64px;
       width: 64px;
       height: 64px;
-      color: #ccc;
       margin-bottom: 16px;
+      color: #ccc;
     }
 
     h3 {
-      font-size: 20px;
-      font-weight: 500;
+      margin: 0 0 8px;
       color: #333;
-      margin-bottom: 8px;
     }
 
     p {
-      font-size: 14px;
-      color: #666;
+      margin: 0;
+      color: #999;
     }
   }
 }
@@ -171,30 +278,19 @@
 
   .search-fields {
     flex-direction: column;
-    
-    mat-form-field {
-      width: 100%;
-    }
+    align-items: stretch;
 
+    mat-form-field,
     button {
       width: 100%;
     }
   }
 
-  .expense-table {
-    font-size: 14px;
-
-    .description-cell {
-      max-width: 200px;
-    }
-  }
-}
-
-@media (max-width: 600px) {
-  // 在小螢幕上隱藏一些欄位
-  .expense-table {
-    .mat-column-category {
-      display: none;
+  .history-card {
+    .expense-table {
+      .inline-edit-field {
+        max-width: 150px;
+      }
     }
   }
 }

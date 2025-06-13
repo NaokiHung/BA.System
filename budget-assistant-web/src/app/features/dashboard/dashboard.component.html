@@ -1,30 +1,27 @@
-<!-- 檔案路徑: budget-assistant-web/src/app/features/dashboard/dashboard.component.html -->
-
-<!--
-  儀表板頁面模板 - 修正版本
-  主要修正：
-  1. 移除所有測試功能和測試用資料
-  2. 增加更好的錯誤處理顯示
-  3. 優化數據顯示邏輯
-  4. 增加空狀態處理
--->
+<!-- 清新現代化儀表板 -->
 <div class="dashboard-container">
   
   <!-- 載入指示器 -->
   <div class="loading-container" *ngIf="isLoading">
-    <mat-spinner diameter="50"></mat-spinner>
-    <p>載入中...</p>
+    <div class="loading-content">
+      <mat-spinner diameter="50" color="primary"></mat-spinner>
+      <p class="loading-text">載入您的財務數據中...</p>
+    </div>
   </div>
 
   <!-- 錯誤訊息 -->
   <div class="error-container" *ngIf="error && !isLoading">
-    <mat-icon color="warn">error</mat-icon>
-    <h3>載入失敗</h3>
-    <p>{{ error }}</p>
-    <button mat-raised-button color="primary" (click)="refreshData()">
-      <mat-icon>refresh</mat-icon>
-      重新載入
-    </button>
+    <div class="error-card">
+      <div class="error-icon">
+        <mat-icon>sentiment_dissatisfied</mat-icon>
+      </div>
+      <h3>哎呀！載入失敗了</h3>
+      <p>{{ error }}</p>
+      <button mat-raised-button color="primary" (click)="refreshData()" class="retry-button">
+        <mat-icon>refresh</mat-icon>
+        重新載入
+      </button>
+    </div>
   </div>
 
   <!-- 主要內容 -->
@@ -32,150 +29,210 @@
     
     <!-- 歡迎訊息 -->
     <div class="welcome-section">
-      <h1>歡迎回來，{{ currentUser?.displayName || currentUser?.username }}！</h1>
-      <p class="welcome-subtitle">這是您的{{ currentMonth }}財務概覽</p>
+      <div class="welcome-content">
+        <div class="greeting">
+          <span class="wave">👋</span>
+          <h1>{{ getGreeting() }}，{{ currentUser?.displayName || currentUser?.username }}！</h1>
+        </div>
+        <p class="welcome-subtitle">{{ currentMonth }}的財務狀況一目了然</p>
+        <div class="date-info">
+          <mat-icon>today</mat-icon>
+          <span>今天是 {{ getCurrentDate() }}</span>
+        </div>
+      </div>
+      <div class="welcome-decoration">
+        <div class="decoration-element element-1">💰</div>
+        <div class="decoration-element element-2">📊</div>
+        <div class="decoration-element element-3">🎯</div>
+      </div>
     </div>
 
     <!-- 預算狀態警示 -->
-    <div class="budget-alert" *ngIf="budgetData && budgetData.totalBudget === 0">
-      <mat-icon>info</mat-icon>
-      <span>您尚未設定本月預算</span>
-      <button mat-stroked-button color="primary" (click)="navigateToBudgetSetting()">
-        立即設定
-      </button>
+    <div class="budget-alert-card" *ngIf="budgetData && budgetData.totalBudget === 0">
+      <div class="alert-content">
+        <div class="alert-icon">
+          <mat-icon>lightbulb</mat-icon>
+        </div>
+        <div class="alert-text">
+          <h4>開始您的理財之旅</h4>
+          <p>設定月預算，讓我們幫您更好地管理財務</p>
+        </div>
+        <button mat-raised-button color="primary" (click)="navigateToBudgetSetting()" class="alert-button">
+          <mat-icon>add</mat-icon>
+          立即設定
+        </button>
+      </div>
     </div>
 
     <!-- 統計卡片區域 -->
     <div class="stats-grid" *ngIf="budgetData">
       
       <!-- 本月預算卡片 -->
-      <mat-card class="stat-card budget-card">
-        <mat-card-header>
-          <mat-card-title>
+      <div class="stat-card budget-card">
+        <div class="card-header">
+          <div class="icon-wrapper budget-icon">
             <mat-icon>account_balance_wallet</mat-icon>
-            本月預算
-          </mat-card-title>
-          <mat-card-subtitle>{{ currentMonth }}</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="stat-amount">
-            {{ formatCurrency(budgetData.totalBudget) }}
           </div>
-          <div class="stat-description">總預算金額</div>
-        </mat-card-content>
-      </mat-card>
+          <div class="card-title">
+            <h3>本月預算</h3>
+            <span class="subtitle">{{ currentMonth }}</span>
+          </div>
+        </div>
+        <div class="card-content">
+          <div class="amount">{{ formatCurrency(budgetData.totalBudget) }}</div>
+          <div class="description">總預算金額</div>
+          <div class="trend positive">
+            <mat-icon>trending_up</mat-icon>
+            <span>財務計劃啟動</span>
+          </div>
+        </div>
+      </div>
 
-      <!-- 本月支出卡片 -->
-      <mat-card class="stat-card expense-card">
-        <mat-card-header>
-          <mat-card-title>
-            <mat-icon>shopping_cart</mat-icon>
-            本月支出
-          </mat-card-title>
-          <mat-card-subtitle>累計金額</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="stat-amount">
-            {{ formatCurrency(budgetData.totalCashExpenses) }}
+      <!-- 現金支出卡片 -->
+      <div class="stat-card expense-card">
+        <div class="card-header">
+          <div class="icon-wrapper expense-icon">
+            <mat-icon>payments</mat-icon>
           </div>
-          <div class="stat-description">
-            平均每日: {{ formatCurrency(dailyAverageSpent) }}
+          <div class="card-title">
+            <h3>現金支出</h3>
+            <span class="subtitle">累計金額</span>
           </div>
-        </mat-card-content>
-      </mat-card>
+        </div>
+        <div class="card-content">
+          <div class="amount">{{ formatCurrency(budgetData.totalCashExpenses) }}</div>
+          <div class="description">平均每日: {{ formatCurrency(dailyAverageSpent) }}</div>
+          <div class="trend" [class.warning]="budgetData.totalCashExpenses > budgetData.totalBudget * 0.8">
+            <mat-icon>{{ budgetData.totalCashExpenses > budgetData.totalBudget * 0.8 ? 'warning' : 'info' }}</mat-icon>
+            <span>{{ budgetData.totalCashExpenses > budgetData.totalBudget * 0.8 ? '接近預算上限' : '支出正常' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 信用卡支出卡片 -->
+      <div class="stat-card credit-card-expense-card">
+        <div class="card-header">
+          <div class="icon-wrapper credit-icon">
+            <mat-icon>credit_card</mat-icon>
+          </div>
+          <div class="card-title">
+            <h3>信用卡支出</h3>
+            <span class="subtitle">累計金額</span>
+          </div>
+        </div>
+        <div class="card-content">
+          <div class="amount">{{ formatCurrency(budgetData.totalCreditCard) }}</div>
+          <div class="description">不影響現金預算</div>
+          <div class="trend info">
+            <mat-icon>info</mat-icon>
+            <span>記錄追蹤中</span>
+          </div>
+        </div>
+      </div>
 
       <!-- 剩餘金額卡片 -->
-      <mat-card class="stat-card remaining-card">
-        <mat-card-header>
-          <mat-card-title>
+      <div class="stat-card remaining-card">
+        <div class="card-header">
+          <div class="icon-wrapper remaining-icon">
             <mat-icon>savings</mat-icon>
-            剩餘金額
-          </mat-card-title>
-          <mat-card-subtitle>可用餘額</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="stat-amount" [class.negative]="budgetData.remainingCash < 0">
+          </div>
+          <div class="card-title">
+            <h3>剩餘金額</h3>
+            <span class="subtitle">可用餘額</span>
+          </div>
+        </div>
+        <div class="card-content">
+          <div class="amount" [class.negative]="budgetData.remainingCash < 0">
             {{ formatCurrency(budgetData.remainingCash) }}
           </div>
-          <div class="stat-description" *ngIf="remainingDays > 0">
+          <div class="description" *ngIf="remainingDays > 0">
             建議每日: {{ formatCurrency(dailyAverageRemaining) }}
           </div>
-        </mat-card-content>
-      </mat-card>
+          <div class="trend" [class.negative]="budgetData.remainingCash < 0" [class.positive]="budgetData.remainingCash >= 0">
+            <mat-icon>{{ budgetData.remainingCash < 0 ? 'trending_down' : 'trending_up' }}</mat-icon>
+            <span>{{ budgetData.remainingCash < 0 ? '超出預算' : '餘額充足' }}</span>
+          </div>
+        </div>
+      </div>
 
-      <!-- 剩餘天數卡片 -->
-      <mat-card class="stat-card days-card">
-        <mat-card-header>
-          <mat-card-title>
-            <mat-icon>calendar_today</mat-icon>
-            剩餘天數
-          </mat-card-title>
-          <mat-card-subtitle>本月剩餘</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="stat-amount">{{ remainingDays }}</div>
-          <div class="stat-description">天</div>
-        </mat-card-content>
-      </mat-card>
     </div>
 
     <!-- 預算使用率進度條 -->
-    <mat-card class="progress-card" *ngIf="budgetData && budgetData.totalBudget > 0">
-      <mat-card-header>
-        <mat-card-title>預算使用率</mat-card-title>
-        <mat-card-subtitle>{{ getBudgetStatusText() }}</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="progress-info">
-          <span>已使用: {{ formatCurrency(totalSpent) }}</span>
-          <span>{{ budgetUtilizationPercentage }}%</span>
+    <div class="progress-section" *ngIf="budgetData && budgetData.totalBudget > 0">
+      <div class="progress-card">
+        <div class="progress-header">
+          <h3>預算使用率</h3>
+          <div class="progress-badge" [class]="getBudgetStatusColor()">
+            {{ getBudgetStatusText() }}
+          </div>
         </div>
-        <mat-progress-bar 
-          [value]="budgetUtilizationPercentage" 
-          [color]="getBudgetStatusColor()">
-        </mat-progress-bar>
-        <div class="progress-details">
-          <small>預算總額: {{ formatCurrency(budgetData.totalBudget) }}</small>
+        <div class="progress-content">
+          <div class="progress-info">
+            <div class="info-item">
+              <span class="label">已使用</span>
+              <span class="value">{{ formatCurrency(totalSpent) }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">使用率</span>
+              <span class="value">{{ budgetUtilizationPercentage }}%</span>
+            </div>
+          </div>
+          <div class="progress-bar-container">
+            <mat-progress-bar 
+              [value]="budgetUtilizationPercentage" 
+              [color]="getBudgetStatusColor()"
+              class="custom-progress-bar">
+            </mat-progress-bar>
+          </div>
+          <div class="progress-details">
+            <small>預算總額: {{ formatCurrency(budgetData.totalBudget) }}</small>
+          </div>
         </div>
-      </mat-card-content>
-    </mat-card>
+      </div>
+    </div>
 
     <!-- 快速操作區域 -->
-    <div class="quick-actions">
+    <div class="quick-actions-section">
       <h2>快速操作</h2>
-      <div class="action-buttons">
-        <button mat-raised-button color="primary" (click)="navigateToAddExpense()">
-          <mat-icon>add</mat-icon>
-          新增支出
+      <div class="action-grid">
+        <button mat-raised-button color="primary" (click)="navigateToAddExpense()" class="action-button primary">
+          <div class="button-content">
+            <mat-icon>add_circle</mat-icon>
+            <span>新增支出</span>
+            <small>記錄花費</small>
+          </div>
         </button>
         
-        <button mat-raised-button color="accent" (click)="navigateToBudgetSetting()">
-          <mat-icon>settings</mat-icon>
-          設定預算
+        <button mat-raised-button color="accent" (click)="navigateToBudgetSetting()" class="action-button accent">
+          <div class="button-content">
+            <mat-icon>tune</mat-icon>
+            <span>設定預算</span>
+            <small>調整計劃</small>
+          </div>
         </button>
         
-        <button mat-stroked-button (click)="navigateToHistory()">
-          <mat-icon>history</mat-icon>
-          查看歷史
+        <button mat-stroked-button (click)="navigateToHistory()" class="action-button outlined">
+          <div class="button-content">
+            <mat-icon>timeline</mat-icon>
+            <span>查看歷史</span>
+            <small>分析趨勢</small>
+          </div>
         </button>
       </div>
     </div>
 
     <!-- 空狀態提示 -->
     <div class="empty-state" *ngIf="!budgetData">
-      <mat-icon>info_outline</mat-icon>
-      <h3>尚無預算資料</h3>
-      <p>開始設定您的第一個月預算，開啟財務管理之旅</p>
-      <button mat-raised-button color="primary" (click)="navigateToBudgetSetting()">
-        設定預算
-      </button>
+      <div class="empty-content">
+        <div class="empty-icon">🌱</div>
+        <h3>開始您的理財之旅</h3>
+        <p>設定您的第一個月預算，開啟智慧財務管理</p>
+        <button mat-raised-button color="primary" (click)="navigateToBudgetSetting()" class="get-started-button">
+          <mat-icon>rocket_launch</mat-icon>
+          開始設定
+        </button>
+      </div>
     </div>
 
   </div>
 </div>
-
-<!-- 注意：移除了所有測試功能相關的程式碼 -->
-<!-- 如果您在其他地方看到類似的測試元件，請檢查以下檔案： -->
-<!-- 1. layout.component.html 的底部 -->
-<!-- 2. app.component.html 的任何測試區域 -->
-<!-- 3. 任何以 test- 或 debug- 開頭的組件 -->

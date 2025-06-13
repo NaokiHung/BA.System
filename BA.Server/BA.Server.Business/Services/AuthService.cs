@@ -175,6 +175,20 @@ namespace BA.Server.Business.Services
             }
         }
 
+        public async Task<bool> EmailExistsAsync(string email)
+        {
+            try
+            {
+                var users = await _userRepository.FindAsync(u => u.Email == email);
+                return users.Any();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "檢查電子郵件是否存在時發生錯誤 - {Email}", email);
+                return false;
+            }
+        }
+
        public async Task<bool> ValidateTokenAsync(string token)
         {
             try

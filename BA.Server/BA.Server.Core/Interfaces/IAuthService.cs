@@ -7,6 +7,7 @@ namespace BA.Server.Core.Interfaces
         Task<LoginResponse> LoginAsync(LoginRequest request);
         Task<LoginResponse> RegisterAsync(RegisterRequest request);
         Task<bool> UserExistsAsync(string username);
+        Task<bool> EmailExistsAsync(string email);
         Task<bool> ValidateTokenAsync(string token);
     }
 }

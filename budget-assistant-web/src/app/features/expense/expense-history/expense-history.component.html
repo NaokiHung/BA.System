@@ -87,7 +87,8 @@
     <mat-card-content>
       <!-- 有資料時顯示表格 -->
       <div *ngIf="expenseHistory.length > 0; else noDataTemplate">
-        <table mat-table [dataSource]="expenseHistory" class="expense-table">
+        <form [formGroup]="editForm">
+          <table mat-table [dataSource]="expenseHistory" class="expense-table">
           <!-- 日期欄位 -->
           <ng-container matColumnDef="date">
             <th mat-header-cell *matHeaderCellDef>日期時間</th>
@@ -98,7 +99,22 @@
           <ng-container matColumnDef="description">
             <th mat-header-cell *matHeaderCellDef>描述</th>
             <td mat-cell *matCellDef="let expense" class="description-cell">
-              {{ expense.description }}
+              <!-- 編輯模式 -->
+              <div *ngIf="expense.isEditing && editingExpenseId === expense.id; else descViewMode">
+                <mat-form-field appearance="outline" class="inline-edit-field">
+                  <input 
+                    matInput 
+                    formControlName="description"
+                    placeholder="請輸入描述">
+                  <mat-error *ngIf="editForm.get('description')?.invalid && editForm.get('description')?.touched">
+                    {{ getEditErrorMessage('description') }}
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              <!-- 檢視模式 -->
+              <ng-template #descViewMode>
+                {{ expense.description }}
+              </ng-template>
             </td>
           </ng-container>
 
@@ -106,7 +122,23 @@
           <ng-container matColumnDef="category">
             <th mat-header-cell *matHeaderCellDef>類別</th>
             <td mat-cell *matCellDef="let expense">
-              <span class="category-chip">{{ expense.category }}</span>
+              <!-- 編輯模式 -->
+              <div *ngIf="expense.isEditing && editingExpenseId === expense.id; else catViewMode">
+                <mat-form-field appearance="outline" class="inline-edit-field">
+                  <mat-select formControlName="category">
+                    <mat-option *ngFor="let cat of expenseCategories" [value]="cat">
+                      {{ cat }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="editForm.get('category')?.invalid && editForm.get('category')?.touched">
+                    {{ getEditErrorMessage('category') }}
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              <!-- 檢視模式 -->
+              <ng-template #catViewMode>
+                <span class="category-chip">{{ expense.category }}</span>
+              </ng-template>
             </td>
           </ng-container>
 
@@ -114,13 +146,108 @@
           <ng-container matColumnDef="amount">
             <th mat-header-cell *matHeaderCellDef class="amount-header">金額</th>
             <td mat-cell *matCellDef="let expense" class="amount-cell">
-              {{ formatCurrency(expense.amount) }}
+              <!-- 編輯模式 -->
+              <div *ngIf="expense.isEditing && editingExpenseId === expense.id; else viewMode">
+                <mat-form-field appearance="outline" class="inline-edit-field">
+                  <input 
+                    matInput 
+                    type="number" 
+                    formControlName="amount"
+                    placeholder="請輸入金額"
+                    step="0.01"
+                    min="0.01">
+                  <mat-error *ngIf="editForm.get('amount')?.invalid && editForm.get('amount')?.touched">
+                    {{ getEditErrorMessage('amount') }}
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              <!-- 檢視模式 -->
+              <ng-template #viewMode>
+                {{ formatCurrency(expense.amount) }}
+              </ng-template>
+            </td>
+          </ng-container>
+
+          <!-- 支出類型欄位 -->
+          <ng-container matColumnDef="type">
+            <th mat-header-cell *matHeaderCellDef>類型</th>
+            <td mat-cell *matCellDef="let expense">
+              <!-- 編輯模式 -->
+              <div *ngIf="expense.isEditing && editingExpenseId === expense.id; else typeViewMode">
+                <mat-form-field appearance="outline" class="inline-edit-field">
+                  <mat-select formControlName="expenseType">
+                    <mat-option [value]="1">
+                      <mat-icon>payments</mat-icon>
+                      現金
+                    </mat-option>
+                    <mat-option [value]="2">
+                      <mat-icon>credit_card</mat-icon>
+                      信用卡
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <!-- 檢視模式 -->
+              <ng-template #typeViewMode>
+                <mat-chip 
+                  [color]="getExpenseTypeColor(expense.expenseType)" 
+                  selected>
+                  {{ getExpenseTypeDisplayName(expense.expenseType) }}
+                </mat-chip>
+              </ng-template>
+            </td>
+          </ng-container>
+
+          <!-- 操作欄位 -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef class="action-header">操作</th>
+            <td mat-cell *matCellDef="let expense" class="action-cell">
+              <!-- 編輯模式操作 -->
+              <div *ngIf="expense.isEditing && editingExpenseId === expense.id; else normalActions">
+                <button 
+                  mat-icon-button 
+                  color="primary"
+                  (click)="saveEdit(expense)"
+                  [disabled]="editForm.invalid || isSaving"
+                  matTooltip="儲存">
+                  <mat-spinner diameter="20" *ngIf="isSaving"></mat-spinner>
+                  <mat-icon *ngIf="!isSaving">save</mat-icon>
+                </button>
+                <button 
+                  mat-icon-button 
+                  (click)="cancelEdit()"
+                  [disabled]="isSaving"
+                  matTooltip="取消">
+                  <mat-icon>cancel</mat-icon>
+                </button>
+              </div>
+              
+              <!-- 一般模式操作 -->
+              <ng-template #normalActions>
+                <button 
+                  mat-icon-button 
+                  color="primary"
+                  (click)="startEdit(expense)"
+                  [disabled]="!expense.canEdit"
+                  matTooltip="編輯">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button 
+                  mat-icon-button 
+                  color="warn"
+                  (click)="deleteExpense(expense)"
+                  [disabled]="!expense.canDelete"
+                  matTooltip="刪除">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </ng-template>
             </td>
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
         </table>
+        </form>
 
         <!-- 總計欄位 -->
         <div class="total-section">

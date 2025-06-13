@@ -105,7 +105,7 @@ namespace BA.Server.API.Extensions
             // 收集所有驗證錯誤訊息
             var errors = context.ModelState
                 .Where(x => x.Value != null && x.Value.Errors.Count > 0)
-                .SelectMany(x => x.Value.Errors)
+                .SelectMany(x => x.Value!.Errors)
                 .Select(x => x.ErrorMessage)
                 .ToList();
 

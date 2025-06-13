@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using BA.Server.Core.Enums;
 
 namespace BA.Server.Core.DTOs.Expense
 {
@@ -14,5 +15,14 @@ namespace BA.Server.Core.DTOs.Expense
         
         [MaxLength(50, ErrorMessage = "分類長度不能超過50個字元")]
         public string? Category { get; set; }
+
+        [Required(ErrorMessage = "支出類型不能為空")]
+        public ExpenseType ExpenseType { get; set; }
+
+        [MaxLength(100, ErrorMessage = "信用卡名稱不能超過100個字元")]
+        public string? CardName { get; set; }
+
+        [Range(1, 60, ErrorMessage = "分期期數必須在1到60之間")]
+        public int? Installments { get; set; }
     }
 }

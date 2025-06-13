@@ -1,33 +1,139 @@
-<!-- 
-檔案路徑: budget-assistant-web/src/app/layout/layout.component.html
-簡化的 Layout 模板，用於除錯
--->
+<!-- 清新現代化主布局 -->
+<div class="app-layout">
+  <!-- 頂部導航欄 -->
+  <header class="app-header" *ngIf="(isAuthenticated$ | async)">
+    <nav class="navbar">
+      <!-- 品牌區域 -->
+      <div class="nav-brand">
+        <div class="brand-logo">
+          <span class="logo-icon">🌱</span>
+          <h1 class="brand-text">預算助手</h1>
+        </div>
+      </div>
+      
+      <!-- 桌面版導航選單 -->
+      <div class="nav-links">
+        <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+          <mat-icon>dashboard</mat-icon>
+          <span>儀表板</span>
+        </a>
+        <a routerLink="/expense/add" routerLinkActive="active" class="nav-link">
+          <mat-icon>add_circle_outline</mat-icon>
+          <span>新增支出</span>
+        </a>
+        <a routerLink="/expense/history" routerLinkActive="active" class="nav-link">
+          <mat-icon>timeline</mat-icon>
+          <span>支出記錄</span>
+        </a>
+        <a routerLink="/expense/budget" routerLinkActive="active" class="nav-link">
+          <mat-icon>tune</mat-icon>
+          <span>預算設定</span>
+        </a>
+      </div>
 
-<div class="layout-container">
-  <!-- 除錯資訊區塊 -->
-  <div class="debug-info" style="background: #f0f0f0; padding: 10px; margin-bottom: 20px; border-radius: 4px;">
-    <h4>🔧 應用程式除錯資訊</h4>
-    <p><strong>當前路由:</strong> {{ router.url }}</p>
-    <p><strong>認證狀態:</strong> {{ (isAuthenticated$ | async) ? '已登入' : '未登入' }}</p>
-    <p><strong>使用者:</strong> {{ (currentUser$ | async)?.username || '無' }}</p>
-    <p><strong>Token:</strong> {{ authService.getToken() ? '存在' : '不存在' }}</p>
-    
-    <div style="margin-top: 10px;">
-      <button (click)="navigateTo('/auth/login')" style="margin-right: 10px;">前往登入</button>
-      <button (click)="navigateTo('/dashboard')">前往儀表板</button>
-      <button (click)="clearStorage()" style="margin-left: 10px;">清除儲存</button>
+      <!-- 右側工具區域 -->
+      <div class="nav-tools">
+        <!-- 手機版菜單按鈕 -->
+        <button 
+          mat-icon-button 
+          class="mobile-menu-button" 
+          (click)="toggleMobileMenu()"
+          [class.active]="showMobileMenu">
+          <mat-icon>{{ showMobileMenu ? 'close' : 'menu' }}</mat-icon>
+        </button>
+        
+        <!-- 用戶選單 -->
+        <div class="user-menu">
+          <button 
+            mat-button 
+            [matMenuTriggerFor]="userMenu" 
+            class="user-button">
+            <div class="user-avatar">
+              <mat-icon>account_circle</mat-icon>
+            </div>
+            <div class="user-info">
+              <span class="user-name">{{ (currentUser$ | async)?.displayName || '使用者' }}</span>
+              <span class="user-role">管理者</span>
+            </div>
+            <mat-icon class="dropdown-icon">keyboard_arrow_down</mat-icon>
+          </button>
+          
+          <mat-menu #userMenu="matMenu" class="user-dropdown">
+            <button mat-menu-item routerLink="/user/profile" class="menu-item">
+              <mat-icon>person_outline</mat-icon>
+              <span>個人資料</span>
+            </button>
+            <button mat-menu-item class="menu-item">
+              <mat-icon>settings</mat-icon>
+              <span>設定</span>
+            </button>
+            <mat-divider></mat-divider>
+            <button mat-menu-item (click)="logout()" class="menu-item logout">
+              <mat-icon>logout</mat-icon>
+              <span>登出</span>
+            </button>
+          </mat-menu>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 手機版導航菜單 -->
+    <div class="mobile-nav-overlay" [class.show]="showMobileMenu" (click)="closeMobileMenu()"></div>
+    <div class="mobile-nav-menu" [class.show]="showMobileMenu">
+      <div class="mobile-nav-header">
+        <div class="mobile-user-info">
+          <div class="mobile-avatar">
+            <mat-icon>account_circle</mat-icon>
+          </div>
+          <div class="mobile-user-details">
+            <span class="mobile-user-name">{{ (currentUser$ | async)?.displayName || '使用者' }}</span>
+            <span class="mobile-user-email">{{ (currentUser$ | async)?.username }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mobile-nav-content">
+        <a routerLink="/dashboard" routerLinkActive="active" class="mobile-nav-item" (click)="closeMobileMenu()">
+          <mat-icon>dashboard</mat-icon>
+          <span>儀表板</span>
+          <mat-icon class="nav-arrow">chevron_right</mat-icon>
+        </a>
+        <a routerLink="/expense/add" routerLinkActive="active" class="mobile-nav-item" (click)="closeMobileMenu()">
+          <mat-icon>add_circle_outline</mat-icon>
+          <span>新增支出</span>
+          <mat-icon class="nav-arrow">chevron_right</mat-icon>
+        </a>
+        <a routerLink="/expense/history" routerLinkActive="active" class="mobile-nav-item" (click)="closeMobileMenu()">
+          <mat-icon>timeline</mat-icon>
+          <span>支出記錄</span>
+          <mat-icon class="nav-arrow">chevron_right</mat-icon>
+        </a>
+        <a routerLink="/expense/budget" routerLinkActive="active" class="mobile-nav-item" (click)="closeMobileMenu()">
+          <mat-icon>tune</mat-icon>
+          <span>預算設定</span>
+          <mat-icon class="nav-arrow">chevron_right</mat-icon>
+        </a>
+        <a routerLink="/user/profile" routerLinkActive="active" class="mobile-nav-item" (click)="closeMobileMenu()">
+          <mat-icon>person_outline</mat-icon>
+          <span>個人資料</span>
+          <mat-icon class="nav-arrow">chevron_right</mat-icon>
+        </a>
+        
+        <div class="mobile-nav-divider"></div>
+        
+        <button class="mobile-nav-item logout-item" (click)="logout(); closeMobileMenu()">
+          <mat-icon>logout</mat-icon>
+          <span>登出</span>
+          <mat-icon class="nav-arrow">chevron_right</mat-icon>
+        </button>
+      </div>
     </div>
-  </div>
+  </header>
 
   <!-- 主要內容區域 -->
-  <div class="main-content" style="min-height: 400px; border: 2px solid #ccc; padding: 20px;">
-    <h3>主要內容區域</h3>
-    <p>這裡應該顯示路由組件的內容</p>
-    
-    <!-- 路由出口 -->
-    <div style="border: 1px dashed #999; padding: 20px; margin-top: 20px;">
-      <h4>📍 Router Outlet：</h4>
+  <main class="app-main">
+    <div class="content-wrapper">
       <router-outlet></router-outlet>
     </div>
-  </div>
+  </main>
 </div>

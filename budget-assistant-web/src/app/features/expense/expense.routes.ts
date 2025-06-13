@@ -11,7 +11,7 @@ import { ExpenseHistoryComponent } from './expense-history/expense-history.compo
  * 3. 便於權限控制和功能擴展
  */
 export const expenseRoutes: Routes = [
-  { path: '', redirectTo: 'add', pathMatch: 'full' },
+  { path: '', redirectTo: 'history', pathMatch: 'full' },
   { path: 'add', component: AddExpenseComponent },
   { path: 'budget', component: BudgetSettingComponent },
   { path: 'history', component: ExpenseHistoryComponent }

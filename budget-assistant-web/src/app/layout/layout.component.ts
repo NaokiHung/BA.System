@@ -1,12 +1,17 @@
 /**
- * 檔案路徑: budget-assistant-web/src/app/layout/layout.component.ts
- * 簡化的 Layout 組件，用於除錯
+ * 主要布局組件
+ * 提供應用程式的導航和結構
  */
 
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, Router } from '@angular/router';
+import { RouterOutlet, Router, RouterModule } from '@angular/router';
 import { Observable, Subject, takeUntil } from 'rxjs';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 import { AuthService } from '../core/services/auth.service';
 import { User } from '../core/models/auth.models';
 
@@ -15,33 +20,39 @@ import { User } from '../core/models/auth.models';
   standalone: true,
   imports: [
     CommonModule,
-    RouterOutlet
+    RouterOutlet,
+    RouterModule,
+    MatToolbarModule,
+    MatButtonModule,
+    MatIconModule,
+    MatMenuModule,
+    MatDividerModule
   ],
   templateUrl: './layout.component.html',
   styleUrls: ['./layout.component.scss']
 })
 export class LayoutComponent implements OnInit, OnDestroy {
-  authService = inject(AuthService); // 改為 public
-  router = inject(Router); // 改為 public
+  private authService = inject(AuthService);
+  private router = inject(Router);
   private destroy$ = new Subject<void>();
   
   isAuthenticated$: Observable<boolean>;
   currentUser$: Observable<User | null>;
+  showMobileMenu = false;
 
   constructor() {
     this.isAuthenticated$ = this.authService.isAuthenticated$;
     this.currentUser$ = this.authService.currentUser$;
-    console.log('🏗️ Layout 組件初始化');
   }
 
   ngOnInit(): void {
-    console.log('🏗️ Layout ngOnInit');
-    
     // 監聽認證狀態變化
     this.isAuthenticated$
       .pipe(takeUntil(this.destroy$))
       .subscribe(isAuth => {
-        console.log('🔐 認證狀態變化:', isAuth);
+        if (!isAuth && this.router.url !== '/auth/login' && this.router.url !== '/auth/register') {
+          this.router.navigate(['/auth/login']);
+        }
       });
   }
 
@@ -51,20 +62,23 @@ export class LayoutComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 導航到指定路由
+   * 登出功能
    */
-  navigateTo(route: string): void {
-    console.log('🧭 導航到:', route);
-    this.router.navigate([route]);
+  logout(): void {
+    this.authService.logout();
   }
 
   /**
-   * 清除本地儲存
+   * 切換手機版菜單顯示
    */
-  clearStorage(): void {
-    console.log('🗑️ 清除本地儲存');
-    localStorage.clear();
-    sessionStorage.clear();
-    window.location.reload();
+  toggleMobileMenu(): void {
+    this.showMobileMenu = !this.showMobileMenu;
+  }
+
+  /**
+   * 關閉手機版菜單
+   */
+  closeMobileMenu(): void {
+    this.showMobileMenu = false;
   }
 }

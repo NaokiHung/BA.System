@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using System.Globalization;
 using BA.Server.Core.DTOs.Expense;
 using BA.Server.Core.Entities;
+using BA.Server.Core.Enums;
 using BA.Server.Core.Interfaces;
 
 namespace BA.Server.Business.Services
@@ -10,15 +11,18 @@ namespace BA.Server.Business.Services
     {
         private readonly IBaseRepository<MonthlyBudget> _budgetRepository;
         private readonly IBaseRepository<CashExpense> _expenseRepository;
+        private readonly IBaseRepository<CreditCardExpense> _creditCardRepository;
         private readonly ILogger<ExpenseService> _logger;
 
         public ExpenseService(
             IBaseRepository<MonthlyBudget> budgetRepository,
             IBaseRepository<CashExpense> expenseRepository,
+            IBaseRepository<CreditCardExpense> creditCardRepository,
             ILogger<ExpenseService> logger)
         {
             _budgetRepository = budgetRepository;
             _expenseRepository = expenseRepository;
+            _creditCardRepository = creditCardRepository;
             _logger = logger;
         }
 
@@ -35,22 +39,27 @@ namespace BA.Server.Business.Services
                     b => b.UserId == userId && b.Year == year && b.Month == month);
                 var budget = budgets.FirstOrDefault();
 
-                // 步驟2：計算當月已支出金額
+                // 步驟2：計算當月現金支出金額
                 var expenses = await _expenseRepository.FindAsync(
                     e => e.UserId == userId && e.Year == year && e.Month == month);
-                var totalExpenses = expenses.Sum(e => e.Amount);
+                var totalCashExpenses = expenses.Sum(e => e.Amount);
 
-                // 步驟3：準備回應資料
+                // 步驟3：計算當月信用卡支出金額
+                var creditCardExpenses = await _creditCardRepository.FindAsync(
+                    e => e.UserId == userId && e.Year == year && e.Month == month);
+                var totalCreditCardExpenses = creditCardExpenses.Sum(e => e.Amount);
+
+                // 步驟4：準備回應資料
                 var monthName = new DateTime(year, month, 1).ToString("yyyy年MM月", new CultureInfo("zh-TW"));
 
                 return new MonthlyBudgetResponse
                 {
                     TotalBudget = budget?.Amount ?? 0,
                     RemainingCash = budget?.RemainingAmount ?? 0,
-                    TotalCashExpenses = totalExpenses,
+                    TotalCashExpenses = totalCashExpenses,
                     TotalSubscriptions = 0, // 暫時設為0，後續實作訂閱功能時再修改
-                    TotalCreditCard = 0,    // 暫時設為0，後續實作信用卡功能時再修改
-                    CombinedCreditTotal = 0,
+                    TotalCreditCard = totalCreditCardExpenses,
+                    CombinedCreditTotal = totalCreditCardExpenses, // 目前等於信用卡支出，訂閱功能實作後會調整
                     Year = year,
                     Month = month,
                     MonthName = monthName
@@ -202,18 +211,51 @@ namespace BA.Server.Business.Services
         {
             try
             {
-                var expenses = await _expenseRepository.FindAsync(
+                // 取得現金支出
+                var cashExpenses = await _expenseRepository.FindAsync(
                     e => e.UserId == userId && e.Year == year && e.Month == month);
 
-                return expenses.OrderByDescending(e => e.CreatedDate)
-                              .Select(e => new
-                              {
-                                  Id = e.Id,
-                                  Amount = e.Amount,
-                                  Description = e.Description,
-                                  Category = e.Category,
-                                  Date = e.CreatedDate.ToString("yyyy-MM-dd HH:mm")
-                              });
+                // 建立統一的支出記錄列表
+                var allExpenses = new List<object>();
+
+                // 添加現金支出
+                foreach (var e in cashExpenses)
+                {
+                    allExpenses.Add(new
+                    {
+                        Id = e.Id,
+                        Amount = e.Amount,
+                        Description = e.Description,
+                        Category = e.Category ?? "其他",
+                        Date = e.CreatedDate.ToString("yyyy-MM-dd HH:mm"),
+                        ExpenseType = "Cash",
+                        CanEdit = true,
+                        CanDelete = true
+                    });
+                }
+
+                // 取得信用卡支出
+                var creditCardExpenses = await _creditCardRepository.FindAsync(
+                    e => e.UserId == userId && e.Year == year && e.Month == month);
+
+                // 添加信用卡支出
+                foreach (var e in creditCardExpenses)
+                {
+                    allExpenses.Add(new
+                    {
+                        Id = e.Id,
+                        Amount = e.Amount,
+                        Description = e.Description,
+                        Category = e.Category ?? "其他",
+                        Date = e.CreatedDate.ToString("yyyy-MM-dd HH:mm"),
+                        ExpenseType = "CreditCard",
+                        CanEdit = true,
+                        CanDelete = true
+                    });
+                }
+
+                // 按日期排序
+                return allExpenses.OrderByDescending(e => DateTime.Parse(((dynamic)e).Date));
             }
             catch (Exception ex)
             {
@@ -224,28 +266,68 @@ namespace BA.Server.Business.Services
 
         // 新增缺少的方法實現
 
-        public async Task<ExpenseResponse> AddCreditCardExpenseAsync(string userId, object request)
+        public async Task<ExpenseResponse> AddCreditCardExpenseAsync(string userId, AddCreditCardExpenseRequest request)
         {
-            // 暫時實現：信用卡支出功能尚未完成
-            _logger.LogWarning("信用卡支出功能尚未實現，使用者：{UserId}", userId);
-            
-            return new ExpenseResponse
+            try
             {
-                Success = false,
-                Message = "信用卡支出功能尚未開放，敬請期待"
-            };
+                var currentDate = DateTime.UtcNow;
+                var year = currentDate.Year;
+                var month = currentDate.Month;
+
+                // 步驟1：新增信用卡支出記錄
+                var expense = new CreditCardExpense
+                {
+                    UserId = userId,
+                    Year = year,
+                    Month = month,
+                    Amount = request.Amount,
+                    Description = request.Description,
+                    Category = request.Category ?? "未分類",
+                    CardName = request.CardName ?? "預設信用卡",
+                    Installments = request.Installments,
+                    CreatedDate = currentDate,
+                    UpdatedDate = null
+                };
+
+                await _creditCardRepository.AddAsync(expense);
+
+                _logger.LogInformation(
+                    "使用者 {UserId} 新增信用卡支出 {Amount}，卡片：{CardName}",
+                    userId, request.Amount, expense.CardName);
+
+                return new ExpenseResponse
+                {
+                    Success = true,
+                    Message = "信用卡支出記錄新增成功",
+                    ExpenseId = expense.Id,
+                    RemainingBudget = 0 // 信用卡支出不影響現金預算
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "新增信用卡支出時發生錯誤，使用者：{UserId}", userId);
+                return new ExpenseResponse
+                {
+                    Success = false,
+                    Message = "新增信用卡支出失敗，請稍後再試"
+                };
+            }
         }
 
         public async Task<ExpenseResponse> UpdateExpenseAsync(string userId, int expenseId, UpdateExpenseRequest request)
         {
             try
             {
-                // 步驟1：檢查支出記錄是否存在且屬於該使用者
-                var expenses = await _expenseRepository.FindAsync(
+                // 步驟1：查找支出記錄（先找現金支出，再找信用卡支出）
+                var cashExpenses = await _expenseRepository.FindAsync(
                     e => e.Id == expenseId && e.UserId == userId);
-                var expense = expenses.FirstOrDefault();
+                var cashExpense = cashExpenses.FirstOrDefault();
 
-                if (expense == null)
+                var creditCardExpenses = await _creditCardRepository.FindAsync(
+                    e => e.Id == expenseId && e.UserId == userId);
+                var creditCardExpense = creditCardExpenses.FirstOrDefault();
+
+                if (cashExpense == null && creditCardExpense == null)
                 {
                     return new ExpenseResponse
                     {
@@ -254,39 +336,30 @@ namespace BA.Server.Business.Services
                     };
                 }
 
-                // 步驟2：計算金額差異，更新預算
-                var amountDifference = request.Amount - expense.Amount;
-                
-                var budgets = await _budgetRepository.FindAsync(
-                    b => b.UserId == userId && b.Year == expense.Year && b.Month == expense.Month);
-                var budget = budgets.FirstOrDefault();
+                // 確定原始支出類型
+                var originalExpenseType = cashExpense != null ? "Cash" : "CreditCard";
+                var originalAmount = cashExpense?.Amount ?? creditCardExpense?.Amount ?? 0;
+                var originalYear = cashExpense?.Year ?? creditCardExpense?.Year ?? 0;
+                var originalMonth = cashExpense?.Month ?? creditCardExpense?.Month ?? 0;
 
-                if (budget != null)
+                // 步驟2：處理類型轉換
+                var requestExpenseTypeString = request.ExpenseType.ToString();
+                if (originalExpenseType != requestExpenseTypeString)
                 {
-                    budget.RemainingAmount -= amountDifference;
-                    budget.UpdatedDate = DateTime.UtcNow;
-                    await _budgetRepository.UpdateAsync(budget);
+                    // 需要轉換類型：刪除原記錄，創建新記錄
+                    return await HandleExpenseTypeConversion(userId, expenseId, request, 
+                        originalExpenseType, originalAmount, originalYear, originalMonth);
                 }
 
-                // 步驟3：更新支出記錄
-                expense.Amount = request.Amount;
-                expense.Description = request.Description;
-                expense.Category = request.Category ?? expense.Category;
-                expense.UpdatedDate = DateTime.UtcNow;
-
-                await _expenseRepository.UpdateAsync(expense);
-
-                _logger.LogInformation(
-                    "使用者 {UserId} 更新支出記錄 {ExpenseId}，金額變更 {AmountDifference}",
-                    userId, expenseId, amountDifference);
-
-                return new ExpenseResponse
+                // 步驟3：同類型更新
+                if (requestExpenseTypeString == "Cash")
                 {
-                    Success = true,
-                    Message = "支出記錄更新成功",
-                    ExpenseId = expense.Id,
-                    RemainingBudget = budget?.RemainingAmount ?? 0
-                };
+                    return await UpdateCashExpense(userId, cashExpense!, request);
+                }
+                else
+                {
+                    return await UpdateCreditCardExpense(userId, creditCardExpense!, request);
+                }
             }
             catch (Exception ex)
             {
@@ -299,16 +372,157 @@ namespace BA.Server.Business.Services
             }
         }
 
+        private async Task<ExpenseResponse> HandleExpenseTypeConversion(string userId, int expenseId, 
+            UpdateExpenseRequest request, string originalType, decimal originalAmount, int year, int month)
+        {
+            // 步驟1：刪除原記錄
+            if (originalType == "Cash")
+            {
+                await _expenseRepository.DeleteAsync(expenseId);
+                // 恢復現金預算
+                await UpdateBudgetAmount(userId, year, month, originalAmount);
+            }
+            else
+            {
+                await _creditCardRepository.DeleteAsync(expenseId);
+            }
+
+            // 步驟2：創建新記錄
+            if (request.ExpenseType == ExpenseType.Cash)
+            {
+                var newCashExpense = new CashExpense
+                {
+                    UserId = userId,
+                    Year = year,
+                    Month = month,
+                    Amount = request.Amount,
+                    Description = request.Description,
+                    Category = request.Category ?? "其他",
+                    CreatedDate = DateTime.UtcNow,
+                    UpdatedDate = DateTime.UtcNow
+                };
+
+                await _expenseRepository.AddAsync(newCashExpense);
+                // 扣除現金預算
+                await UpdateBudgetAmount(userId, year, month, -request.Amount);
+
+                return new ExpenseResponse
+                {
+                    Success = true,
+                    Message = "支出記錄已轉換為現金支出",
+                    ExpenseId = newCashExpense.Id,
+                    RemainingBudget = await GetRemainingBudget(userId, year, month)
+                };
+            }
+            else
+            {
+                var newCreditCardExpense = new CreditCardExpense
+                {
+                    UserId = userId,
+                    Year = year,
+                    Month = month,
+                    Amount = request.Amount,
+                    Description = request.Description,
+                    Category = request.Category ?? "其他",
+                    CardName = request.CardName ?? "預設信用卡",
+                    Installments = request.Installments ?? 1,
+                    CreatedDate = DateTime.UtcNow,
+                    UpdatedDate = DateTime.UtcNow
+                };
+
+                await _creditCardRepository.AddAsync(newCreditCardExpense);
+
+                return new ExpenseResponse
+                {
+                    Success = true,
+                    Message = "支出記錄已轉換為信用卡支出",
+                    ExpenseId = newCreditCardExpense.Id,
+                    RemainingBudget = await GetRemainingBudget(userId, year, month)
+                };
+            }
+        }
+
+        private async Task<ExpenseResponse> UpdateCashExpense(string userId, CashExpense expense, UpdateExpenseRequest request)
+        {
+            var amountDifference = request.Amount - expense.Amount;
+
+            // 更新預算
+            await UpdateBudgetAmount(userId, expense.Year, expense.Month, -amountDifference);
+
+            // 更新記錄
+            expense.Amount = request.Amount;
+            expense.Description = request.Description;
+            expense.Category = request.Category ?? expense.Category;
+            expense.UpdatedDate = DateTime.UtcNow;
+
+            await _expenseRepository.UpdateAsync(expense);
+
+            return new ExpenseResponse
+            {
+                Success = true,
+                Message = "現金支出記錄更新成功",
+                ExpenseId = expense.Id,
+                RemainingBudget = await GetRemainingBudget(userId, expense.Year, expense.Month)
+            };
+        }
+
+        private async Task<ExpenseResponse> UpdateCreditCardExpense(string userId, CreditCardExpense expense, UpdateExpenseRequest request)
+        {
+            // 更新記錄
+            expense.Amount = request.Amount;
+            expense.Description = request.Description;
+            expense.Category = request.Category ?? expense.Category;
+            expense.CardName = request.CardName ?? expense.CardName;
+            expense.Installments = request.Installments ?? expense.Installments;
+            expense.UpdatedDate = DateTime.UtcNow;
+
+            await _creditCardRepository.UpdateAsync(expense);
+
+            return new ExpenseResponse
+            {
+                Success = true,
+                Message = "信用卡支出記錄更新成功",
+                ExpenseId = expense.Id,
+                RemainingBudget = await GetRemainingBudget(userId, expense.Year, expense.Month)
+            };
+        }
+
+        private async Task UpdateBudgetAmount(string userId, int year, int month, decimal amount)
+        {
+            var budgets = await _budgetRepository.FindAsync(
+                b => b.UserId == userId && b.Year == year && b.Month == month);
+            var budget = budgets.FirstOrDefault();
+
+            if (budget != null)
+            {
+                budget.RemainingAmount += amount;
+                budget.UpdatedDate = DateTime.UtcNow;
+                await _budgetRepository.UpdateAsync(budget);
+            }
+        }
+
+        private async Task<decimal> GetRemainingBudget(string userId, int year, int month)
+        {
+            var budgets = await _budgetRepository.FindAsync(
+                b => b.UserId == userId && b.Year == year && b.Month == month);
+            var budget = budgets.FirstOrDefault();
+            return budget?.RemainingAmount ?? 0;
+        }
+
         public async Task<ExpenseResponse> DeleteExpenseAsync(string userId, int expenseId)
         {
             try
             {
-                // 步驟1：檢查支出記錄是否存在且屬於該使用者
-                var expenses = await _expenseRepository.FindAsync(
+                // 步驟1：查找支出記錄（先找現金支出，再找信用卡支出）
+                var cashExpenses = await _expenseRepository.FindAsync(
                     e => e.Id == expenseId && e.UserId == userId);
-                var expense = expenses.FirstOrDefault();
+                var cashExpense = cashExpenses.FirstOrDefault();
 
-                if (expense == null)
+                var creditCardExpenses = await _creditCardRepository.FindAsync(
+                    e => e.Id == expenseId && e.UserId == userId);
+                var creditCardExpense = creditCardExpenses.FirstOrDefault();
+
+                if (cashExpense == null && creditCardExpense == null)
                 {
                     return new ExpenseResponse
                     {
@@ -317,31 +531,50 @@ namespace BA.Server.Business.Services
                     };
                 }
 
-                // 步驟2：恢復預算金額
-                var budgets = await _budgetRepository.FindAsync(
-                    b => b.UserId == userId && b.Year == expense.Year && b.Month == expense.Month);
-                var budget = budgets.FirstOrDefault();
-
-                if (budget != null)
+                // 步驟2：刪除記錄並處理預算
+                if (cashExpense != null)
                 {
-                    budget.RemainingAmount += expense.Amount;
-                    budget.UpdatedDate = DateTime.UtcNow;
-                    await _budgetRepository.UpdateAsync(budget);
+                    // 刪除現金支出：需要恢復預算
+                    var budgets = await _budgetRepository.FindAsync(
+                        b => b.UserId == userId && b.Year == cashExpense.Year && b.Month == cashExpense.Month);
+                    var budget = budgets.FirstOrDefault();
+
+                    if (budget != null)
+                    {
+                        budget.RemainingAmount += cashExpense.Amount;
+                        budget.UpdatedDate = DateTime.UtcNow;
+                        await _budgetRepository.UpdateAsync(budget);
+                    }
+
+                    await _expenseRepository.DeleteAsync(expenseId);
+
+                    _logger.LogInformation(
+                        "使用者 {UserId} 刪除現金支出記錄 {ExpenseId}，恢復預算 {Amount}",
+                        userId, expenseId, cashExpense.Amount);
+
+                    return new ExpenseResponse
+                    {
+                        Success = true,
+                        Message = "現金支出記錄刪除成功",
+                        RemainingBudget = budget?.RemainingAmount ?? 0
+                    };
                 }
-
-                // 步驟3：刪除支出記錄
-                await _expenseRepository.DeleteAsync(expenseId);
-
-                _logger.LogInformation(
-                    "使用者 {UserId} 刪除支出記錄 {ExpenseId}，恢復預算 {Amount}",
-                    userId, expenseId, expense.Amount);
-
-                return new ExpenseResponse
+                else
                 {
-                    Success = true,
-                    Message = "支出記錄刪除成功",
-                    RemainingBudget = budget?.RemainingAmount ?? 0
-                };
+                    // 刪除信用卡支出：不影響現金預算
+                    await _creditCardRepository.DeleteAsync(expenseId);
+
+                    _logger.LogInformation(
+                        "使用者 {UserId} 刪除信用卡支出記錄 {ExpenseId}，金額 {Amount}",
+                        userId, expenseId, creditCardExpense!.Amount);
+
+                    return new ExpenseResponse
+                    {
+                        Success = true,
+                        Message = "信用卡支出記錄刪除成功",
+                        RemainingBudget = await GetRemainingBudget(userId, creditCardExpense.Year, creditCardExpense.Month)
+                    };
+                }
             }
             catch (Exception ex)
             {
@@ -383,7 +616,7 @@ namespace BA.Server.Business.Services
                         Id = expense.Id,
                         Amount = expense.Amount,
                         Description = expense.Description,
-                        Category = expense.Category,
+                        Category = expense.Category ?? "其他",
                         Year = expense.Year,
                         Month = expense.Month,
                         CreatedDate = expense.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss"),

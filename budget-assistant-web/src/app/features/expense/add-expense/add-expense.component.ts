@@ -11,7 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ExpenseService } from '../../../core/services/expense.service';
-import { AddCashExpenseRequest } from '../../../core/models/expense.models';
+import { AddCashExpenseRequest, AddCreditCardExpenseRequest } from '../../../core/models/expense.models';
 
 /**
  * 新增支出組件 - Angular 19 獨立元件
@@ -79,6 +79,9 @@ export class AddExpenseComponent implements OnInit {
       ]],
       category: ['', [
         Validators.maxLength(50)
+      ]],
+      expenseType: ['Cash', [
+        Validators.required
       ]]
     });
   }
@@ -90,17 +93,32 @@ export class AddExpenseComponent implements OnInit {
     if (this.expenseForm.valid && !this.isLoading) {
       this.isLoading = true;
       
-      const request: AddCashExpenseRequest = {
+      const expenseType = this.expenseForm.value.expenseType;
+      const baseRequest = {
         amount: this.expenseForm.value.amount,
         description: this.expenseForm.value.description.trim(),
         category: this.expenseForm.value.category || '其他'
       };
+
+      let submitObservable;
       
-      this.expenseService.addCashExpense(request).subscribe({
+      if (expenseType === 'Cash') {
+        const request: AddCashExpenseRequest = baseRequest;
+        submitObservable = this.expenseService.addCashExpense(request);
+      } else {
+        const request: AddCreditCardExpenseRequest = {
+          ...baseRequest,
+          cardName: '預設信用卡',
+          installments: 1
+        };
+        submitObservable = this.expenseService.addCreditCardExpense(request);
+      }
+      
+      submitObservable.subscribe({
         next: (response) => {
           if (response.success) {
             this.snackBar.open(
-              `支出新增成功！剩餘預算：${this.formatCurrency(response.remainingBudget)}`, 
+              `${expenseType === 'Cash' ? '現金' : '信用卡'}支出新增成功！剩餘預算：${this.formatCurrency(response.remainingBudget)}`, 
               '關閉', 
               { duration: 5000, panelClass: ['success-snackbar'] }
             );

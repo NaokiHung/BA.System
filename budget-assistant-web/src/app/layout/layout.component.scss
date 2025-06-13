@@ -1,171 +1,364 @@
 /**
- * 版面配置樣式
- * 為什麼使用 SCSS？
- * 1. 支援巢狀選擇器，程式碼更有組織
- * 2. 變數和 mixin 功能提高可維護性
- * 3. 與 Angular Material 主題系統整合
+ * 清新現代化主布局樣式
+ * 採用自然色彩與玻璃質感設計
  */
 
-.app-container {
-  height: 100vh;
-  overflow: hidden;
+.app-layout {
+  @apply min-h-screen flex flex-col;
+  font-family: 'Inter', 'Noto Sans TC', system-ui, sans-serif;
 }
 
-.sidenav-container {
-  height: 100%;
+// 頂部導航欄
+.app-header {
+  @apply sticky top-0 z-50;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(34, 197, 94, 0.1);
+  box-shadow: 0 1px 20px rgba(0, 0, 0, 0.05);
 }
 
-.sidenav {
-  width: 280px;
-  background-color: #fafafa;
-
-  .user-info {
-    display: flex;
-    align-items: center;
-    padding: 20px 16px;
-    background-color: #f5f5f5;
-
-    .user-avatar {
-      font-size: 48px;
-      width: 48px;
-      height: 48px;
-      margin-right: 16px;
-      color: #666;
-    }
-
-    .user-details {
-      display: flex;
-      flex-direction: column;
-
-      .username {
-        font-weight: 500;
-        font-size: 16px;
-        color: #333;
+.navbar {
+  @apply flex items-center justify-between px-4 md:px-6 h-16 max-w-7xl mx-auto w-full;
+  
+  // 品牌區域
+  .nav-brand {
+    .brand-logo {
+      @apply flex items-center gap-3;
+      
+      .logo-icon {
+        @apply text-2xl;
+        filter: drop-shadow(0 2px 4px rgba(34, 197, 94, 0.3));
       }
-
-      .user-email {
-        font-size: 14px;
-        color: #666;
-        margin-top: 4px;
+      
+      .brand-text {
+        @apply text-xl md:text-2xl font-bold m-0;
+        background: linear-gradient(135deg, #22c55e, #0ea5e9);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: -0.025em;
       }
     }
   }
-}
-
-.toolbar {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-
-  .app-title {
-    font-size: 18px;
-    font-weight: 500;
+  
+  // 桌面版導航鏈接
+  .nav-links {
+    @apply hidden lg:flex items-center gap-2;
+    
+    .nav-link {
+      @apply flex items-center gap-2 px-4 py-2 rounded-xl text-sage-600 no-underline font-medium transition-all duration-300 relative;
+      
+      &::before {
+        content: '';
+        @apply absolute inset-0 rounded-xl opacity-0 transition-opacity duration-300;
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(14, 165, 233, 0.1));
+      }
+      
+      &:hover {
+        @apply text-fresh-600 transform -translate-y-0.5;
+        
+        &::before {
+          opacity: 1;
+        }
+      }
+      
+      &.active {
+        @apply text-fresh-600 bg-fresh-50;
+        box-shadow: 0 2px 8px rgba(34, 197, 94, 0.15);
+        
+        &::before {
+          opacity: 1;
+        }
+      }
+      
+      mat-icon {
+        @apply text-lg relative z-10;
+      }
+      
+      span {
+        @apply relative z-10;
+      }
+    }
   }
-
-  .toolbar-spacer {
-    flex: 1 1 auto;
+  
+  // 右側工具區域
+  .nav-tools {
+    @apply flex items-center gap-3;
+    
+    // 手機版菜單按鈕
+    .mobile-menu-button {
+      @apply lg:hidden w-10 h-10 rounded-xl text-sage-600 transition-all duration-300;
+      
+      &:hover {
+        @apply bg-fresh-50 text-fresh-600;
+      }
+      
+      &.active {
+        @apply bg-fresh-100 text-fresh-700;
+      }
+      
+      mat-icon {
+        @apply text-xl;
+      }
+    }
+    
+    // 用戶選單
+    .user-menu {
+      @apply hidden md:block;
+      
+      .user-button {
+        @apply flex items-center gap-3 px-4 py-2 rounded-xl text-sage-600 transition-all duration-300;
+        background: transparent !important;
+        
+        &:hover {
+          @apply bg-fresh-50 text-fresh-600 transform -translate-y-0.5;
+        }
+        
+        .user-avatar {
+          @apply w-8 h-8 rounded-full bg-fresh-100 flex items-center justify-center;
+          
+          mat-icon {
+            @apply text-fresh-600 text-xl;
+          }
+        }
+        
+        .user-info {
+          @apply flex flex-col items-start;
+          
+          .user-name {
+            @apply text-sm font-semibold leading-none;
+          }
+          
+          .user-role {
+            @apply text-xs text-sage-400 leading-none mt-0.5;
+          }
+        }
+        
+        .dropdown-icon {
+          @apply text-base text-sage-400 transition-transform duration-300;
+        }
+        
+        &[aria-expanded="true"] .dropdown-icon {
+          transform: rotate(180deg);
+        }
+      }
+    }
   }
 }
 
-.main-content {
-  padding: 20px;
-  height: calc(100vh - 64px); // 減去 toolbar 高度
-  overflow-y: auto;
-  background-color: #f5f5f5;
+// 用戶下拉選單樣式
+.user-dropdown {
+  ::ng-deep .mat-mdc-menu-panel {
+    @apply rounded-2xl shadow-soft border border-sage-100;
+    backdrop-filter: blur(20px);
+    background: rgba(255, 255, 255, 0.95);
+    
+    .menu-item {
+      @apply flex items-center gap-3 px-4 py-3 text-sage-600 transition-colors duration-200;
+      
+      &:hover {
+        @apply bg-fresh-50 text-fresh-600;
+      }
+      
+      &.logout {
+        @apply text-sunset-600;
+        
+        &:hover {
+          @apply bg-sunset-50 text-sunset-700;
+        }
+      }
+      
+      mat-icon {
+        @apply text-base;
+      }
+    }
+  }
 }
 
-.auth-layout {
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+// 手機版導航
+.mobile-nav-overlay {
+  @apply fixed inset-0 bg-black/30 z-40 opacity-0 pointer-events-none transition-opacity duration-300;
+  
+  &.show {
+    @apply opacity-100 pointer-events-auto;
+  }
 }
 
-.user-menu-header {
-  padding: 8px 16px;
-  font-weight: 500;
-  color: #333;
+.mobile-nav-menu {
+  @apply fixed top-16 right-0 h-[calc(100vh-4rem)] w-80 max-w-[90vw] bg-white/95 backdrop-blur-xl shadow-2xl transform translate-x-full transition-transform duration-300 z-50;
+  border-left: 1px solid rgba(34, 197, 94, 0.1);
+  
+  &.show {
+    transform: translateX(0);
+  }
+  
+  .mobile-nav-header {
+    @apply p-6 border-b border-sage-100;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.05), rgba(14, 165, 233, 0.05));
+    
+    .mobile-user-info {
+      @apply flex items-center gap-4;
+      
+      .mobile-avatar {
+        @apply w-12 h-12 rounded-full bg-fresh-100 flex items-center justify-center;
+        
+        mat-icon {
+          @apply text-fresh-600 text-2xl;
+        }
+      }
+      
+      .mobile-user-details {
+        @apply flex flex-col;
+        
+        .mobile-user-name {
+          @apply font-semibold text-sage-800;
+        }
+        
+        .mobile-user-email {
+          @apply text-sm text-sage-500;
+        }
+      }
+    }
+  }
+  
+  .mobile-nav-content {
+    @apply p-4;
+    
+    .mobile-nav-item {
+      @apply flex items-center justify-between px-4 py-3 rounded-xl text-sage-600 no-underline transition-all duration-300 mb-2;
+      
+      &:hover {
+        @apply bg-fresh-50 text-fresh-600 transform translate-x-1;
+      }
+      
+      &.active {
+        @apply bg-fresh-100 text-fresh-700;
+        box-shadow: 0 2px 8px rgba(34, 197, 94, 0.15);
+      }
+      
+      &.logout-item {
+        @apply text-sunset-600 bg-transparent border-none cursor-pointer w-full text-left;
+        
+        &:hover {
+          @apply bg-sunset-50 text-sunset-700;
+        }
+      }
+      
+      mat-icon:first-child {
+        @apply text-lg;
+      }
+      
+      span {
+        @apply flex-1 ml-3;
+      }
+      
+      .nav-arrow {
+        @apply text-sage-400 text-sm transition-transform duration-300;
+      }
+      
+      &:hover .nav-arrow {
+        transform: translateX(2px);
+      }
+    }
+    
+    .mobile-nav-divider {
+      @apply h-px bg-sage-200 my-4;
+    }
+  }
+}
+
+// 主要內容區域
+.app-main {
+  @apply flex-1 relative;
+  min-height: calc(100vh - 4rem);
+  
+  // 移除覆蓋全域背景，讓各個頁面自己控制背景
+  .content-wrapper {
+    @apply max-w-7xl mx-auto relative z-10;
+    // 移除預設 padding，讓各個頁面自己控制
+  }
 }
 
 // 響應式設計
+@media (max-width: 1024px) {
+  .navbar {
+    .nav-links {
+      @apply hidden;
+    }
+    
+    .nav-tools .mobile-menu-button {
+      @apply block;
+    }
+  }
+}
+
 @media (max-width: 768px) {
-  .sidenav {
-    width: 100%;
+  .navbar {
+    @apply px-4 h-14;
+    
+    .nav-brand .brand-logo {
+      .logo-icon {
+        @apply text-xl;
+      }
+      
+      .brand-text {
+        @apply text-lg;
+      }
+    }
+    
+    .nav-tools .user-menu {
+      @apply hidden;
+    }
   }
   
-  .main-content {
-    padding: 16px;
-  }
-}
-
-@media (max-width: 480px) {
-  .main-content {
-    padding: 12px;
-  }
-}
-
-/**
- * 導航選單樣式更新
- * 檔案路徑：budget-assistant-web/src/app/layout/layout.component.scss
- * 
- * 新增導航區域標題的樣式
- */
-
-// 原有的樣式保持不變，新增以下樣式：
-
-// === 導航區域標題 ===
-.nav-section-header {
-  padding: 16px 16px 8px 16px;
-  margin-top: 8px;
-
-  span {
-    font-size: 12px;
-    font-weight: 600;
-    color: #666;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-}
-
-// === 導航項目間距調整 ===
-.mat-mdc-nav-list {
-  .mat-mdc-list-item {
-    margin-bottom: 4px;
-
-    // 圖示和文字的對齊
-    .mat-mdc-list-item-icon {
-      margin-right: 16px;
-      color: #666;
+  .mobile-nav-menu {
+    @apply top-14 h-[calc(100vh-3.5rem)] w-full max-w-none;
+    
+    &.show {
+      transform: translateX(0);
     }
+  }
+  
+  .app-main {
+    min-height: calc(100vh - 3.5rem);
+  }
+}
 
-    // 懸停效果
-    &:hover {
-      background-color: rgba(0, 0, 0, 0.04);
-      border-radius: 8px;
-      margin: 4px 8px;
+@media (max-width: 640px) {
+  .mobile-nav-menu {
+    .mobile-nav-header {
+      @apply p-4;
       
-      .mat-mdc-list-item-icon {
-        color: #1976d2;
+      .mobile-user-info {
+        @apply gap-3;
+        
+        .mobile-avatar {
+          @apply w-10 h-10;
+          
+          mat-icon {
+            @apply text-xl;
+          }
+        }
       }
     }
   }
+}
 
-  // 分隔線樣式
-  mat-divider {
-    margin: 12px 0;
-    border-color: #e0e0e0;
+// 動畫
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
   }
 }
 
-// === 響應式設計 ===
-@media (max-width: 768px) {
-  .nav-section-header {
-    padding: 12px 12px 6px 12px;
-    
-    span {
-      font-size: 11px;
-    }
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
   }
 }

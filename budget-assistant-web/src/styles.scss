@@ -1,34 +1,117 @@
 /**
- * 全域樣式 - Angular 19 修正版
- * 修正 Angular Material 19 的新語法
+ * 清新現代化全域樣式 - Angular 19 + TailwindCSS 3.4
+ * 自然清新的設計風格
  */
 
-// Angular Material 主題匯入 - 使用新的 Angular 19 語法
+// Angular Material 主題匯入
 @use '@angular/material' as mat;
+
+// TailwindCSS 基礎樣式
+@use 'tailwindcss/base';
+@use 'tailwindcss/components';
+@use 'tailwindcss/utilities';
+
+// 自訂調色盤 - 清新自然風格
+$fresh-green: (
+  50: #f0fdf4,
+  100: #dcfce7,
+  200: #bbf7d0,
+  300: #86efac,
+  400: #4ade80,
+  500: #22c55e,
+  600: #16a34a,
+  700: #15803d,
+  800: #166534,
+  900: #14532d,
+  contrast: (
+    50: rgba(0, 0, 0, 0.87),
+    100: rgba(0, 0, 0, 0.87),
+    200: rgba(0, 0, 0, 0.87),
+    300: rgba(0, 0, 0, 0.87),
+    400: rgba(0, 0, 0, 0.87),
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+  )
+);
+
+$ocean-blue: (
+  50: #f0f9ff,
+  100: #e0f2fe,
+  200: #bae6fd,
+  300: #7dd3fc,
+  400: #38bdf8,
+  500: #0ea5e9,
+  600: #0284c7,
+  700: #0369a1,
+  800: #075985,
+  900: #0c4a6e,
+  contrast: (
+    50: rgba(0, 0, 0, 0.87),
+    100: rgba(0, 0, 0, 0.87),
+    200: rgba(0, 0, 0, 0.87),
+    300: rgba(0, 0, 0, 0.87),
+    400: rgba(0, 0, 0, 0.87),
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+  )
+);
+
+$sunset-orange: (
+  50: #fef7ee,
+  100: #fdedd3,
+  200: #fbd8a5,
+  300: #f8be6d,
+  400: #f59a32,
+  500: #f2800d,
+  600: #e36207,
+  700: #bc460a,
+  800: #973710,
+  900: #7c2d12,
+  contrast: (
+    50: rgba(0, 0, 0, 0.87),
+    100: rgba(0, 0, 0, 0.87),
+    200: rgba(0, 0, 0, 0.87),
+    300: rgba(0, 0, 0, 0.87),
+    400: rgba(0, 0, 0, 0.87),
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+  )
+);
 
 // 包含核心樣式
 @include mat.core();
 
-// 定義調色盤 - 使用新的語法
-$my-primary: mat.m2-define-palette(mat.$m2-indigo-palette);
-$my-accent: mat.m2-define-palette(mat.$m2-pink-palette, A200, A100, A400);
-$my-warn: mat.m2-define-palette(mat.$m2-red-palette);
+// 定義調色盤
+$primary-palette: mat.m2-define-palette($fresh-green, 500, 300, 700);
+$accent-palette: mat.m2-define-palette($ocean-blue, 500, 300, 700);
+$warn-palette: mat.m2-define-palette($sunset-orange, 500, 300, 700);
 
-// 定義主題 - 使用新的語法
-$my-theme: mat.m2-define-light-theme((
+// 定義主題
+$theme: mat.m2-define-light-theme((
   color: (
-    primary: $my-primary,
-    accent: $my-accent,
-    warn: $my-warn,
+    primary: $primary-palette,
+    accent: $accent-palette,
+    warn: $warn-palette,
   ),
-  typography: mat.m2-define-typography-config(),
+  typography: mat.m2-define-typography-config(
+    $font-family: 'Inter, "Noto Sans TC", system-ui, sans-serif'
+  ),
   density: 0,
 ));
 
 // 套用主題
-@include mat.all-component-themes($my-theme);
+@include mat.all-component-themes($theme);
 
-// 全域重置
+// 全域重置與基本樣式
 * {
   box-sizing: border-box;
 }
@@ -37,97 +120,296 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
+  font-family: 'Inter', 'Noto Sans TC', system-ui, sans-serif;
 }
 
 body {
-  font-family: 'Roboto', 'Noto Sans TC', sans-serif;
-  line-height: 1.5;
-  color: #333;
-  background-color: #fafafa;
+  @apply text-sage-800 leading-relaxed antialiased;
+  background: linear-gradient(135deg, 
+    #f0fdf4 0%,    // fresh-50
+    #f0f9ff 25%,   // ocean-50  
+    #fef7ee 50%,   // sunset-50
+    #faf5ff 75%,   // lavender-50
+    #f6f7f6 100%   // sage-50
+  );
+  background-attachment: fixed;
+  min-height: 100vh;
 }
 
-// 全域樣式類別
-.full-width {
-  width: 100%;
+// Angular Material 組件現代化樣式
+.mat-mdc-form-field {
+  .mat-mdc-text-field-wrapper {
+    &.mdc-text-field--outlined {
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      
+      .mat-mdc-form-field-focus-overlay {
+        background-color: transparent;
+      }
+      
+      .mdc-notched-outline {
+        .mdc-notched-outline__leading,
+        .mdc-notched-outline__notch,
+        .mdc-notched-outline__trailing {
+          border-color: rgba(34, 197, 94, 0.3);
+          border-width: 1px;
+        }
+        
+        &.mdc-notched-outline--upgraded {
+          .mdc-notched-outline__leading,
+          .mdc-notched-outline__notch,
+          .mdc-notched-outline__trailing {
+            border-width: 1px;
+          }
+        }
+      }
+      
+      &:hover .mdc-notched-outline {
+        .mdc-notched-outline__leading,
+        .mdc-notched-outline__notch,
+        .mdc-notched-outline__trailing {
+          border-color: rgba(34, 197, 94, 0.6);
+        }
+      }
+      
+      &.mdc-text-field--focused .mdc-notched-outline {
+        .mdc-notched-outline__leading,
+        .mdc-notched-outline__notch,
+        .mdc-notched-outline__trailing {
+          border-color: #22c55e;
+          border-width: 2px;
+          box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+        }
+      }
+    }
+  }
+  
+  .mat-mdc-form-field-infix {
+    min-height: 56px;
+    padding: 16px 0 16px 0;
+  }
+  
+  .mat-mdc-input-element {
+    color: #333633;
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.009375em;
+  }
+  
+  .mat-mdc-form-field-label {
+    color: #6b776b;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 0.009375em;
+  }
+  
+  &.mat-focused .mat-mdc-form-field-label {
+    color: #22c55e;
+  }
 }
 
-.text-center {
-  text-align: center;
+// Select 下拉選單樣式
+.mat-mdc-select {
+  .mat-mdc-select-trigger {
+    color: rgba(0, 0, 0, 0.87);
+    font-size: 16px;
+    font-weight: 400;
+  }
+  
+  .mat-mdc-select-arrow {
+    color: rgba(0, 0, 0, 0.54);
+  }
+  
+  &.mat-mdc-select-focused .mat-mdc-select-arrow {
+    color: #667eea;
+  }
 }
 
-.text-right {
-  text-align: right;
+// 按鈕樣式修復
+.mat-mdc-button-base {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.0892857143em;
+  text-decoration: none;
+  text-transform: none;
+  
+  &.mat-mdc-raised-button {
+    box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 
+                0px 2px 2px 0px rgba(0, 0, 0, 0.14), 
+                0px 1px 5px 0px rgba(0, 0, 0, 0.12);
+    
+    &:hover {
+      box-shadow: 0px 2px 4px -1px rgba(0, 0, 0, 0.2), 
+                  0px 4px 5px 0px rgba(0, 0, 0, 0.14), 
+                  0px 1px 10px 0px rgba(0, 0, 0, 0.12);
+    }
+  }
+  
+  &.mat-primary {
+    background-color: #667eea;
+    color: white;
+    
+    &:hover {
+      background-color: #5a6fd8;
+    }
+  }
+  
+  &.mat-accent {
+    background-color: #fa709a;
+    color: white;
+    
+    &:hover {
+      background-color: #f85a86;
+    }
+  }
 }
 
-.mt-1 { margin-top: 8px; }
-.mt-2 { margin-top: 16px; }
-.mt-3 { margin-top: 24px; }
-.mt-4 { margin-top: 32px; }
-
-.mb-1 { margin-bottom: 8px; }
-.mb-2 { margin-bottom: 16px; }
-.mb-3 { margin-bottom: 24px; }
-.mb-4 { margin-bottom: 32px; }
-
-// 自訂 Snackbar 樣式 - 使用 CSS 變數
-.success-snackbar {
-  --mdc-snackbar-container-color: #4caf50 !important;
-  --mdc-snackbar-supporting-text-color: white !important;
+// Card 樣式修復
+.mat-mdc-card {
+  border-radius: 12px;
+  box-shadow: 0px 2px 1px -1px rgba(0, 0, 0, 0.2), 
+              0px 1px 1px 0px rgba(0, 0, 0, 0.14), 
+              0px 1px 3px 0px rgba(0, 0, 0, 0.12);
+  
+  .mat-mdc-card-header {
+    padding: 16px;
+    
+    .mat-mdc-card-title {
+      font-size: 24px;
+      font-weight: 400;
+      line-height: 32px;
+      margin: 0;
+    }
+    
+    .mat-mdc-card-subtitle {
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 20px;
+      margin: 0;
+      color: rgba(0, 0, 0, 0.6);
+    }
+  }
+  
+  .mat-mdc-card-content {
+    padding: 16px;
+  }
 }
 
-.error-snackbar {
-  --mdc-snackbar-container-color: #f44336 !important;
-  --mdc-snackbar-supporting-text-color: white !important;
+// Table 樣式修復
+.mat-mdc-table {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  
+  .mat-mdc-header-row {
+    background-color: #f5f5f5;
+    
+    .mat-mdc-header-cell {
+      color: rgba(0, 0, 0, 0.87);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.0333333333em;
+      padding: 16px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    }
+  }
+  
+  .mat-mdc-row {
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+    }
+    
+    .mat-mdc-cell {
+      color: rgba(0, 0, 0, 0.87);
+      font-size: 14px;
+      font-weight: 400;
+      padding: 16px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    }
+  }
 }
 
-.warning-snackbar {
-  --mdc-snackbar-container-color: #ff9800 !important;
-  --mdc-snackbar-supporting-text-color: white !important;
+// Chip 樣式修復
+.mat-mdc-chip {
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.0125em;
+  
+  &.mat-primary {
+    background-color: #667eea;
+    color: white;
+  }
+  
+  &.mat-accent {
+    background-color: #fa709a;
+    color: white;
+  }
 }
 
-// 滾動條樣式美化
+// Progress Bar 樣式修復
+.mat-mdc-progress-bar {
+  .mdc-linear-progress__bar-inner {
+    border-color: #667eea;
+  }
+  
+  &.mat-primary .mdc-linear-progress__bar-inner {
+    border-color: #667eea;
+  }
+  
+  &.mat-accent .mdc-linear-progress__bar-inner {
+    border-color: #fa709a;
+  }
+}
+
+// Snackbar 樣式修復
+.mat-mdc-snack-bar-container {
+  &.success-snackbar {
+    --mdc-snackbar-container-color: #4caf50;
+    --mdc-snackbar-supporting-text-color: white;
+  }
+  
+  &.error-snackbar {
+    --mdc-snackbar-container-color: #f44336;
+    --mdc-snackbar-supporting-text-color: white;
+  }
+  
+  &.warning-snackbar {
+    --mdc-snackbar-container-color: #ff9800;
+    --mdc-snackbar-supporting-text-color: white;
+  }
+}
+
+// 滾動條樣式美化 - 使用 TailwindCSS
 ::-webkit-scrollbar {
-  width: 8px;
+  @apply w-2;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  @apply bg-gray-100;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
+  @apply bg-gray-400 rounded;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  @apply bg-gray-500;
 }
 
-// 響應式工具類別
-@media (max-width: 768px) {
+// 自訂工具類別 - 延伸 TailwindCSS
+@layer utilities {
   .hide-mobile {
-    display: none !important;
+    @apply md:block hidden;
   }
-}
-
-@media (min-width: 769px) {
+  
   .hide-desktop {
-    display: none !important;
+    @apply md:hidden block;
   }
-}
-
-// 載入動畫
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+  
+  .fade-in {
+    @apply animate-fade-in;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.fade-in {
-  animation: fadeIn 0.3s ease-out;
 }
